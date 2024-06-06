@@ -1,18 +1,54 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload HEIC Photo</title>
+    <title>Upload HEIC Photo and Retrieve Data</title>
 </head>
 <body>
+    <h1>Upload HEIC Photo</h1>
     <form id="uploadForm" enctype="multipart/form-data">
         <input type="file" id="heicFile" name="heicFile" accept=".heic" required>
         <button type="submit">Upload HEIC Photo</button>
     </form>
 
+    <hr>
+
+    <h1>Retrieve Data</h1>
+    <form id="recordForm">
+        <label for="recordId">Enter Record ID:</label>
+        <input type="text" id="recordId" name="recordId" required>
+        <button type="submit">Retrieve Data</button>
+    </form>
+
+    <div id="recordDetails"></div>
+
     <script>
+        // Function to retrieve data from the database
+        const retrieveData = (recordId) => {
+            fetch(`/record?id=${recordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('recordDetails').innerText = data.error;
+                    } else {
+                        const record = data.record;
+                        const recordDetails = `
+                            <p><strong>ID:</strong> ${record.id}</p>
+                            <p><strong>Timestamp:</strong> ${record.timestamp}</p>
+                            <p><strong>Longitude:</strong> ${record.longitude}</p>
+                            <p><strong>Latitude:</strong> ${record.latitude}</p>
+                            <p><strong>Path:</strong> ${record.path}</p>
+                        `;
+                        document.getElementById('recordDetails').innerHTML = recordDetails;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to retrieve data from the database.');
+                });
+        };
+
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -39,6 +75,18 @@
                 console.error('Error:', error);
                 alert('File upload failed.');
             });
+        });
+
+        document.getElementById('recordForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const recordId = document.getElementById('recordId').value.trim();
+            if (!recordId) {
+                alert('Please enter a record ID');
+                return;
+            }
+
+            retrieveData(recordId);
         });
     </script>
 </body>
