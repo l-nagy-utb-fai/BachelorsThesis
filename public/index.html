@@ -22,6 +22,7 @@
     </form>
 
     <div id="recordDetails"></div>
+    <div id="imageContainer"></div>
 
     <script>
         // Function to retrieve data from the database
@@ -41,6 +42,10 @@
                             <p><strong>Path:</strong> ${record.path}</p>
                         `;
                         document.getElementById('recordDetails').innerHTML = recordDetails;
+
+                        // Display the image
+                        const imageHtml = `<img src="${record.path}" alt="Uploaded Image" onerror="console.error('Error loading image:', this.src)">`;
+                        document.getElementById('imageContainer').innerHTML = imageHtml;
                     }
                 })
                 .catch(error => {

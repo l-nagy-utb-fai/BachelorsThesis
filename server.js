@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
@@ -40,6 +39,9 @@ const upload = multer({ storage: storage });
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve uploaded JPEG files
+app.use('/uploads', express.static(uploadDir));
+
 // Handle file upload and conversion
 app.post('/upload', upload.single('heicFile'), (req, res) => {
     if (!req.file) {
@@ -50,9 +52,9 @@ app.post('/upload', upload.single('heicFile'), (req, res) => {
 
     // Convert the uploaded HEIC file to JPEG
     convertHeicToJpeg(filePath)
-        .then(() => {
+        .then((jpegPath) => {
             // Insert metadata into the database
-            insertMetadata(filePath)
+            insertMetadata(jpegPath)
                 .then(() => {
                     res.send({ message: 'File uploaded successfully and metadata inserted into the database', file: req.file });
                 })
@@ -95,24 +97,15 @@ app.get('/record', async (req, res) => {
     }
 });
 
-// Serve uploaded JPEG files
-app.get('/uploads/:filename', (req, res) => {
-    const filename = req.params.filename;
-    const filePath = path.join(__dirname, 'uploads', filename);
-
-    // Check if the file exists
-    if (fs.existsSync(filePath)) {
-        // Send the file as response
-        res.sendFile(filePath);
-    } else {
-        // File not found
-        res.status(404).send('File not found');
-    }
-});
-
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+// Function to convert epoch timestamp to ISO 8601 format
+const epochToIso8601 = (epoch) => {
+    const date = new Date(epoch * 1000); // Convert to milliseconds
+    return date.toISOString();
+};
 
 // Function to insert metadata into the database
 const insertMetadata = async (filePath) => {
@@ -127,6 +120,12 @@ const insertMetadata = async (filePath) => {
     const latitude = result.tags.GPSLatitude;
     const longitude = result.tags.GPSLongitude;
 
+    // Convert the timestamp to ISO 8601 format
+    const isoTimestamp = epochToIso8601(timestamp);
+
+    // Convert the absolute path to a relative path
+    const relativePath = path.relative(__dirname, filePath).replace(/\\/g, '/');
+
     // Insert metadata into the database
     const client = new Client(dbConfig);
     await client.connect();
@@ -136,7 +135,7 @@ const insertMetadata = async (filePath) => {
             INSERT INTO records (timestamp, longitude, latitude, path)
             VALUES ($1, $2, $3, $4)
         `;
-        const values = [timestamp, longitude, latitude, filePath];
+        const values = [isoTimestamp, longitude, latitude, relativePath];
         await client.query(query, values);
     } finally {
         await client.end();
