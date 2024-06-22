@@ -3,26 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload HEIC Photo and Retrieve Data</title>
+    <title>Retrieve Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 100%;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        .record-form {
+            margin-bottom: 20px;
+        }
+
+        .content {
+            display: flex;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        .left {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .right {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column, .row {
+            border: 1px solid black;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .column img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .right-top {
+            flex: 1;
+        }
+
+        .right-bottom {
+            flex: 2;
+            display: flex;
+        }
+
+        .right-bottom-left {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .right-bottom-right {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-bottom-right .row {
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        .right-bottom-right .row:last-child {
+            flex: 3;
+            margin-bottom: 0;
+        }
+
+        .right-bottom-right .row textarea {
+            width: 100%;
+            height: 100%;
+            resize: none;
+        }
+
+        .upload-button {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload HEIC Photo</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="heicFile" name="heicFile" accept=".heic" required>
-        <button type="submit">Upload HEIC Photo</button>
-    </form>
-
-    <hr>
-
-    <h1>Retrieve Data</h1>
-    <form id="recordForm">
-        <label for="recordId">Enter Record ID:</label>
-        <input type="text" id="recordId" name="recordId" required>
-        <button type="submit">Retrieve Data</button>
-    </form>
-
-    <div id="recordDetails"></div>
-    <div id="imageContainer"></div>
+    <div class="container">
+        <div class="record-form">
+            <form id="recordForm">
+                <label for="recordId">Enter Record ID:</label>
+                <input type="text" id="recordId" name="recordId" required>
+                <button type="submit">Retrieve Data</button>
+            </form>
+        </div>
+        <div class="content">
+            <div class="left">
+                <div class="column" id="recordIdDisplay">ID: </div>
+                <div class="column" id="imageContainer">Photo: </div>
+                <div class="column" id="timestampDisplay">Timestamp: </div>
+            </div>
+            <div class="right">
+                <div class="right-top column" id="locationName">Name of Location: </div>
+                <div class="right-bottom">
+                    <div class="right-bottom-left column" id="secondImageContainer">Another Photo: </div>
+                    <div class="right-bottom-right">
+                        <div class="row" id="coordinates">Longitude, Latitude: </div>
+                        <div class="row" id="address">Address: </div>
+                        <div class="row" id="comments">
+                            <textarea placeholder="Comment"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="upload-button" onclick="window.location.href='/upload'">Upload HEIC Photo</button>
+    </div>
 
     <script>
         // Function to retrieve data from the database
@@ -31,21 +133,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        document.getElementById('recordDetails').innerText = data.error;
+                        document.getElementById('recordIdDisplay').innerText = 'ID: ' + data.error;
                     } else {
                         const record = data.record;
-                        const recordDetails = `
-                            <p><strong>ID:</strong> ${record.id}</p>
-                            <p><strong>Timestamp:</strong> ${record.timestamp}</p>
-                            <p><strong>Longitude:</strong> ${record.longitude}</p>
-                            <p><strong>Latitude:</strong> ${record.latitude}</p>
-                            <p><strong>Path:</strong> ${record.path}</p>
-                        `;
-                        document.getElementById('recordDetails').innerHTML = recordDetails;
-
-                        // Display the image
-                        const imageHtml = `<img src="${record.path}" alt="Uploaded Image" onerror="console.error('Error loading image:', this.src)">`;
-                        document.getElementById('imageContainer').innerHTML = imageHtml;
+                        document.getElementById('recordIdDisplay').innerText = 'ID: ' + record.id;
+                        document.getElementById('imageContainer').innerHTML = 'Photo: <img src="' + record.path + '" alt="Uploaded Image" onerror="console.error(\'Error loading image:\', this.src)">';
+                        document.getElementById('timestampDisplay').innerText = 'Timestamp: ' + record.timestamp;
+                        document.getElementById('locationName').innerText = 'Name of Location: ' + (record.locationName || '');
+                        document.getElementById('coordinates').innerText = 'Longitude, Latitude: ' + record.longitude + ', ' + record.latitude;
+                        document.getElementById('address').innerText = 'Address: ' + (record.address || '');
+                        document.getElementById('comments').querySelector('textarea').value = record.comment || '';
                     }
                 })
                 .catch(error => {
@@ -53,34 +150,6 @@
                     alert('Failed to retrieve data from the database.');
                 });
         };
-
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const formData = new FormData();
-            const fileField = document.getElementById('heicFile');
-
-            if (fileField.files.length === 0) {
-                alert('Please select a file to upload');
-                return;
-            }
-
-            formData.append('heicFile', fileField.files[0]);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('File uploaded successfully!');
-                console.log(data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('File upload failed.');
-            });
-        });
 
         document.getElementById('recordForm').addEventListener('submit', function(event) {
             event.preventDefault();

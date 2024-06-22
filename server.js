@@ -42,8 +42,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve uploaded JPEG files
 app.use('/uploads', express.static(uploadDir));
 
+// Serve the main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Serve the upload page
+app.get('/upload', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'upload.html'));
+});
+
 // Handle file upload and conversion
-app.post('/upload', upload.single('heicFile'), (req, res) => {
+app.post('/api/upload', upload.single('heicFile'), (req, res) => {
     if (!req.file) {
         return res.status(400).send({ message: 'No file uploaded' });
     }
