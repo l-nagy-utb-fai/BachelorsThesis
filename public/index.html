@@ -106,13 +106,13 @@
         <div class="content">
             <div class="left">
                 <div class="column" id="recordIdDisplay">ID: </div>
-                <div class="column" id="imageContainer">Photo: </div>
-                <div class="column" id="timestampDisplay">Timestamp: </div>
+                <div class="column" id="photo">Photo: </div>
+                <div class="column" id="timestamp">Timestamp: </div>
             </div>
             <div class="right">
                 <div class="right-top column" id="locationName">Name of Location: </div>
                 <div class="right-bottom">
-                    <div class="right-bottom-left column" id="secondImageContainer">Another Photo: </div>
+                    <div class="right-bottom-left column" id="secondImageContainer">Map: </div>
                     <div class="right-bottom-right">
                         <div class="row" id="coordinates">Longitude, Latitude: </div>
                         <div class="row" id="address">Address: </div>
@@ -136,9 +136,9 @@
                         document.getElementById('recordIdDisplay').innerText = 'ID: ' + data.error;
                     } else {
                         const record = data.record;
-                        document.getElementById('recordIdDisplay').innerText = 'ID: ' + record.id;
-                        document.getElementById('imageContainer').innerHTML = 'Photo: <img src="' + record.path + '" alt="Uploaded Image" onerror="console.error(\'Error loading image:\', this.src)">';
-                        document.getElementById('timestampDisplay').innerText = 'Timestamp: ' + record.timestamp;
+                        document.getElementById('recordIdDisplay').innerText = '' + record.id + '.';
+                        document.getElementById('photo').innerHTML = '<img src="' + record.path + '" alt="Uploaded Image" onerror="console.error(\'Error loading image:\', this.src)">';
+                        document.getElementById('timestamp').innerText = '' + record.timestampFormatted;
                         document.getElementById('locationName').innerText = 'Name of Location: ' + (record.locationName || '');
                         document.getElementById('coordinates').innerText = 'Longitude, Latitude: ' + record.longitude + ', ' + record.latitude;
                         document.getElementById('address').innerText = 'Address: ' + (record.address || '');
