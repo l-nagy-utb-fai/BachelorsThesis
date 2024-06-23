@@ -51,7 +51,8 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
     const filePath = path.join(__dirname, 'uploads', req.file.filename); //To uploads dir.
     convertHeicToJpeg(filePath) //Conversion to JPEG
         .then((jpegPath) => { //Metadata to database insertion
-            insertMetadata(jpegPath)
+            const comment = req.body.comment || '';
+            insertMetadata(jpegPath, comment)
                 .then(() => {
                     res.send({ message: 'File uploaded successfully and metadata inserted into the database', file: req.file });
                 })
@@ -102,7 +103,7 @@ const epochToIso8601 = (epoch) => {
 };
 
 //Metadata insertion to database
-const insertMetadata = async (filePath) => { //By JPEG path
+const insertMetadata = async (filePath, comment) => { //By JPEG path
     const data = fs.readFileSync(filePath);
     const parser = exifParser.create(data); 
     const result = parser.parse();
@@ -122,10 +123,10 @@ const insertMetadata = async (filePath) => { //By JPEG path
 
     try {
         const query = `
-            INSERT INTO records (timestamp, longitude, latitude, path)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO records (timestamp, longitude, latitude, path, comment)
+            VALUES ($1, $2, $3, $4, $5)
         `;
-        const values = [isoTimestamp, longitude, latitude, relativePath];
+        const values = [isoTimestamp, longitude, latitude, relativePath, comment];
         await client.query(query, values);
     } finally {
         await client.end();
@@ -160,36 +161,3 @@ const formatTimestamp = (timestamp) => {
 
     return formattedDate;
 };
-
-/*
-    // Convert the timestamp to ISO 8601 format
-    const epochTimestamp = timestamp; // Your epoch timestamp
-    // Convert epoch timestamp to milliseconds (required by Date constructor)
-    const milliseconds = epochTimestamp * 1000; 
-    // Create a new Date object
-    const date = new Date(milliseconds);
-    // Define arrays for days of the week and months in Czech
-    const daysOfWeek = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
-    const months = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];   
-// Get individual components of the date
-const dayOfWeek = daysOfWeek[date.getDay()];
-const dayOfMonth = date.getDate();
-const month = months[date.getMonth()];
-const year = date.getFullYear();
-let hours = date.getHours();
-let minutes = date.getMinutes();
-// Format hours and minutes to have leading zeros if necessary
-if (minutes < 10) {
-    minutes = '0' + minutes;
-}
-if (hours < 10) {
-    hours = '0' + hours;
-}
-// Construct the formatted date string
-const formattedDate = `${dayOfWeek} ${dayOfMonth}. ${month} ${year} v ${hours}.${minutes}`;
-console.log(`Formatted Date: ${formattedDate}`);
-   
-    
-
-console.log(`isoTimestamp: ${isoTimestamp}`);
-*/

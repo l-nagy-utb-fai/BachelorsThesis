@@ -12,5 +12,6 @@ CREATE TABLE records (
     timestamp TIMESTAMP NOT NULL,
     longitude DECIMAL(9, 6) NOT NULL,
     latitude DECIMAL(8, 6) NOT NULL,
-    path TEXT NOT NULL
+    path TEXT NOT NULL,
+    comment TEXT
 );
