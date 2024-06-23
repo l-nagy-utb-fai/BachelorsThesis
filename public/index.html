@@ -10,6 +10,30 @@
             margin: 0;
             padding: 20px;
             overflow-x: hidden; /* Prevent horizontal scrolling */
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full viewport height */
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .upload-button {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .record-form {
+            width: 100%;
+            max-width: 420px;
+            padding: 10px;
+            border: 1px solid black;
+            box-sizing: border-box;
         }
 
         .container {
@@ -18,10 +42,8 @@
             align-items: center;
             max-width: 100%;
             overflow-x: hidden; /* Prevent horizontal scrolling */
-        }
-
-        .record-form {
-            margin-bottom: 20px;
+            flex: 1; /* Flex-grow to fill remaining space */
+            width: 100%; /* Ensure full width */
         }
 
         .content {
@@ -29,13 +51,16 @@
             width: 100%;
             max-width: 100%;
             overflow-x: hidden; /* Prevent horizontal scrolling */
+            flex: 1;
         }
 
         .left {
             flex: 1;
             margin-right: 20px;
+            display: flex;
+            flex-direction: column;
         }
-
+        
         .right {
             flex: 2;
             display: flex;
@@ -46,25 +71,28 @@
             border: 1px solid black;
             padding: 10px;
             margin-bottom: 20px;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .column img {
             max-width: 100%;
             height: auto;
-        }
-
-        .right-top {
-            flex: 1;
+            max-height: 200px;
+            object-fit: contain;
         }
 
         .right-bottom {
-            flex: 2;
             display: flex;
+            flex: 1;
         }
 
         .right-bottom-left {
             flex: 1;
             margin-right: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
         }
 
         .right-bottom-right {
@@ -74,12 +102,12 @@
         }
 
         .right-bottom-right .row {
-            flex: 1;
             margin-bottom: 20px;
+            box-sizing: border-box;
         }
 
         .right-bottom-right .row:last-child {
-            flex: 3;
+            flex: 1;
             margin-bottom: 0;
         }
 
@@ -89,13 +117,40 @@
             resize: none;
         }
 
-        .upload-button {
-            margin-top: 20px;
+        /* Fixed height for the photo container */
+        #photo {
+            height: 360px; /* Set fixed height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0; /* Optional: Set a background color for visual indication */
+        }
+
+        /* Ensure image fits within the container */
+        #photo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #secondImageContainer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+        }
+
+        #comment{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="header">
         <div class="record-form">
             <form id="recordForm">
                 <label for="recordId">Enter Record ID:</label>
@@ -103,12 +158,15 @@
                 <button type="submit">Retrieve Data</button>
             </form>
         </div>
+        <button class="upload-button" onclick="window.location.href='/upload'">Upload HEIC Photo</button>
+    </div>
         <div class="content">
             <div class="left">
                 <div class="column" id="recordIdDisplay">ID: </div>
                 <div class="column" id="photo">Photo: </div>
                 <div class="column" id="timestamp">Timestamp: </div>
             </div>
+
             <div class="right">
                 <div class="right-top column" id="locationName">Name of Location: </div>
                 <div class="right-bottom">
@@ -123,7 +181,6 @@
                 </div>
             </div>
         </div>
-        <button class="upload-button" onclick="window.location.href='/upload'">Upload HEIC Photo</button>
     </div>
 
     <script>
