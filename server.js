@@ -112,13 +112,34 @@ app.get('/api/locations', async (req, res) => {
 // Function to reverse geocode latitude and longitude to an address
 async function reverseGeocode(lat, lon) {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-    const response = await fetch(url);
-    const data = await response.json();
 
-    if (!data.error) {
-        return data.display_name;
-    } else {
-        return 'Address not found';
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.error) {
+            let address = '';
+
+            if (data.address.house_number) {
+                address += data.address.house_number + ' ';
+            }
+            if (data.address.road) {
+                address += data.address.road + ', ';
+            }
+            if (data.address.postcode) {
+                address += data.address.postcode + ' ';
+            }
+            if (data.address.city) {
+                address += data.address.city;
+            }
+
+            return address.trim();
+        } else {
+            return 'Address not found';
+        }
+    } catch (error) {
+        console.error('Error fetching address:', error);
+        return 'Error fetching address';
     }
 }
 
