@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retrieve Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -133,6 +134,11 @@
             flex-direction: column;
             justify-content: stretch;
         }
+
+        #map {
+            width: 100%;
+            height: 360px; /* Set a fixed height for the map */
+        }        
     </style>
 </head>
 <body>
@@ -157,7 +163,9 @@
             <div class="right">
                 <div class="right-top column" id="locationName">Name of Location: </div>
                 <div class="right-bottom">
-                    <div class="right-bottom-left column" id="secondImageContainer">Map: </div>
+                    <div class="right-bottom-left column" id="secondImageContainer"> Map:
+                        <div id="map"></div> 
+                    </div>
                     <div class="right-bottom-right">
                         <div class="row" id="coordinates">Souřadnice: </div>
                         <div class="row" id="address">Address: </div>
@@ -170,6 +178,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Function to format coordinates based on provided rules
         const formatCoordinates = (latitude, longitude) => {
@@ -181,6 +190,20 @@
             let formattedLongitude = Math.abs(longitude).toFixed(5).replace('.', ',');
 
             return `${formattedLatitude}°${latitudeSuffix}\n${formattedLongitude}°${longitudeSuffix}`;
+        };
+
+        
+        // Function to initialize and display the map
+        const initializeMap = (latitude, longitude) => {
+            const map = L.map('map').setView([latitude, longitude], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Location')
+                .openPopup();
         };
 
         // Function to retrieve data from the database
@@ -199,6 +222,9 @@
                         document.getElementById('coordinates').innerText = formatCoordinates(record.latitude, record.longitude);
                         document.getElementById('address').innerText = 'Address: ' + (record.address || '');
                         document.getElementById('comments').innerText = '' + record.comment || '';
+
+                        // Initialize and display the map
+                        initializeMap(record.latitude, record.longitude);
                     }
                 })
                 .catch(error => {
