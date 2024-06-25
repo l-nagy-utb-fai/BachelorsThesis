@@ -5,6 +5,7 @@ const fs = require('fs'); //Reading and writing TO files
 const { Client } = require('pg'); //Interaction with database
 const exifParser = require('exif-parser'); //Metadata extraction
 const convertHeicToJpeg = require('./convert'); 
+const fetch = require('node-fetch');
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -108,6 +109,19 @@ app.get('/api/locations', async (req, res) => {
     }
 });
 
+// Function to reverse geocode latitude and longitude to an address
+async function reverseGeocode(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.error) {
+        return data.display_name;
+    } else {
+        return 'Address not found';
+    }
+}
+
 //Retrieving records by ID
 app.get('/record', async (req, res) => {
     const recordId = req.query.id; //Getting ID
@@ -128,6 +142,10 @@ app.get('/record', async (req, res) => {
         const formattedTimestamp = formatTimestamp(record.timestamp);
         record.timestampFormatted = formattedTimestamp;
         record.locationName = record.location_name;       
+
+        // Get the address using reverse geocoding
+        const address = await reverseGeocode(record.latitude, record.longitude);
+        record.address = address;    
 
         res.json({ record }); //Retrieving data
     } catch (error) {
@@ -164,16 +182,19 @@ const insertMetadata = async (filePath, comment, locationId) => { //By JPEG path
     // Convert the absolute path to a relative path
     const relativePath = path.relative(__dirname, filePath).replace(/\\/g, '/');//Absolute path to relative
 
+    // Get the address using reverse geocoding
+    const address = await reverseGeocode(latitude, longitude);
+
     // Insert metadata into the database
     const client = new Client(dbConfig); //
     await client.connect();
 
     try {
         const query = `
-            INSERT INTO records (timestamp, longitude, latitude, path, comment, location_id)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO records (timestamp, longitude, latitude, path, comment, location_id, address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
-        const values = [isoTimestamp, longitude, latitude, relativePath, comment, locationId];
+        const values = [isoTimestamp, longitude, latitude, relativePath, comment, locationId, address];
         await client.query(query, values);
     } finally {
         await client.end();

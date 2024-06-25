@@ -212,7 +212,7 @@
                         document.getElementById('timestamp').innerText = '' + record.timestampFormatted;
                         document.getElementById('locationName').innerText = '' + (record.locationName || '');
                         document.getElementById('coordinates').innerText = formatCoordinates(record.latitude, record.longitude);
-                        document.getElementById('address').innerText = 'Address: ' + (record.address || '');
+                        document.getElementById('address').innerText = '' + (record.address || '');
                         document.getElementById('comments').innerText = '' + record.comment || '';
 
                         // Initialize and display the map

@@ -19,5 +19,6 @@ CREATE TABLE records (
     latitude DECIMAL(8, 6) NOT NULL,
     path TEXT NOT NULL,
     comment TEXT,
-    location_id INT REFERENCES locations(id)
+    location_id INT REFERENCES locations(id),
+    address TEXT
 );
