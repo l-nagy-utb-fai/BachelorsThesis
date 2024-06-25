@@ -52,7 +52,8 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
     convertHeicToJpeg(filePath) //Conversion to JPEG
         .then((jpegPath) => { //Metadata to database insertion
             const comment = req.body.comment || '';
-            insertMetadata(jpegPath, comment)
+            const locationId = req.body.locationId || null;
+            insertMetadata(jpegPath, comment, locationId)
                 .then(() => {
                     res.send({ message: 'File uploaded successfully and metadata inserted into the database', file: req.file });
                 })
@@ -65,6 +66,46 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
             console.error('Error converting file:', error);
             res.status(500).send({ message: 'An error occurred during conversion' });
         });
+});
+
+// New route to handle location uploads
+app.post('/api/uploadLocation', express.json(), async (req, res) => {
+    const locationName = req.body.locationName;
+
+    if (!locationName) {
+        return res.status(400).send({ message: 'Location name is required' });
+    }
+
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const query = 'INSERT INTO locations (name) VALUES ($1) RETURNING id';
+        const result = await client.query(query, [locationName]);
+
+        res.send({ message: 'Location uploaded successfully', locationId: result.rows[0].id });
+    } catch (error) {
+        console.error('Error inserting location into database:', error);
+        res.status(500).send({ message: 'An error occurred during location insertion' });
+    } finally {
+        await client.end();
+    }
+});
+
+// New route to fetch locations
+app.get('/api/locations', async (req, res) => {
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const result = await client.query('SELECT id, name FROM locations');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching locations from database:', error);
+        res.status(500).send({ message: 'An error occurred while fetching locations' });
+    } finally {
+        await client.end();
+    }
 });
 
 //Retrieving records by ID
@@ -103,7 +144,7 @@ const epochToIso8601 = (epoch) => {
 };
 
 //Metadata insertion to database
-const insertMetadata = async (filePath, comment) => { //By JPEG path
+const insertMetadata = async (filePath, comment, locationId) => { //By JPEG path
     const data = fs.readFileSync(filePath);
     const parser = exifParser.create(data); 
     const result = parser.parse();
@@ -123,10 +164,10 @@ const insertMetadata = async (filePath, comment) => { //By JPEG path
 
     try {
         const query = `
-            INSERT INTO records (timestamp, longitude, latitude, path, comment)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO records (timestamp, longitude, latitude, path, comment, location_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
         `;
-        const values = [isoTimestamp, longitude, latitude, relativePath, comment];
+        const values = [isoTimestamp, longitude, latitude, relativePath, comment, locationId];
         await client.query(query, values);
     } finally {
         await client.end();
