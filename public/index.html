@@ -192,10 +192,14 @@
             return `${formattedLatitude}°${latitudeSuffix}\n${formattedLongitude}°${longitudeSuffix}`;
         };
 
-        
         // Function to initialize and display the map
+        let map = null; // Variable to hold the map instance
+
         const initializeMap = (latitude, longitude) => {
-            const map = L.map('map').setView([latitude, longitude], 18);
+            if (map) {
+                map.remove(); // Remove existing map instance if it exists
+            }
+            map = L.map('map').setView([latitude, longitude], 18);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
