@@ -114,14 +114,20 @@ app.get('/record', async (req, res) => {
     const client = new Client(dbConfig); //Connecting to database
     await client.connect();
     try {
-        const query = 'SELECT * FROM records WHERE id = $1';
+        const query = `
+            SELECT records.*, locations.name AS location_name
+            FROM records
+            LEFT JOIN locations ON records.location_id = locations.id
+            WHERE records.id = $1
+        `;
         const result = await client.query(query, [recordId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Record not found' });
         }
         const record = result.rows[0];
         const formattedTimestamp = formatTimestamp(record.timestamp);
-        record.timestampFormatted = formattedTimestamp;        
+        record.timestampFormatted = formattedTimestamp;
+        record.locationName = record.location_name;       
 
         res.json({ record }); //Retrieving data
     } catch (error) {
