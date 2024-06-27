@@ -168,16 +168,34 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+       // Function to convert decimal degrees to degrees, minutes, and seconds
+        const decimalToDMS = (decimal) => {
+            const degrees = Math.floor(decimal);
+            const minutesDecimal = (decimal - degrees) * 60;
+            const minutes = Math.floor(minutesDecimal);
+            const seconds = ((minutesDecimal - minutes) * 60).toFixed(1);
+
+            return { degrees, minutes, seconds };
+        }; 
+
         // Function to format coordinates based on provided rules
         const formatCoordinates = (latitude, longitude) => {
             let latitudeSuffix = latitude < 0 ? 'J' : 'S';
             let longitudeSuffix = longitude < 0 ? 'Z' : 'V';
 
-            // Format coordinates to 5 decimal places and replace dot with comma
-            let formattedLatitude = Math.abs(latitude).toFixed(5).replace('.', ',');
-            let formattedLongitude = Math.abs(longitude).toFixed(5).replace('.', ',');
+            // Convert latitude and longitude to absolute values for formatting
+            const absLatitude = Math.abs(latitude);
+            const absLongitude = Math.abs(longitude);
 
-            return `${formattedLatitude}°${latitudeSuffix}\n${formattedLongitude}°${longitudeSuffix}`;
+            // Convert decimal coordinates to DMS format
+            const latitudeDMS = decimalToDMS(absLatitude);
+            const longitudeDMS = decimalToDMS(absLongitude);
+
+            // Format latitude and longitude as DMS
+            const formattedLatitude = `Zeměpisná šířka: ${latitudeDMS.degrees}° ${latitudeDMS.minutes}' ${latitudeDMS.seconds}" ${latitudeSuffix}`;
+            const formattedLongitude = `Zeměpisná délka: ${longitudeDMS.degrees}° ${longitudeDMS.minutes}' ${longitudeDMS.seconds}" ${longitudeSuffix}`;
+
+            return `${formattedLatitude}\n${formattedLongitude}`;
         };
 
         // Function to initialize and display the map

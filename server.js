@@ -234,19 +234,16 @@ const formatTimestamp = (timestamp) => {
     const year = date.getFullYear();
     let hours = date.getHours();
     let minutes = date.getMinutes();
+    let seconds = date.getSeconds();
 
+    if (seconds < 10) seconds = '0' + seconds; // Add leading zero if minutes are less than 10
     // Format hours and minutes to match the specified format
-    if (minutes < 10) {
-        minutes = '0' + minutes; // Add leading zero if minutes are less than 10
-    }
-
+    if (minutes < 10) minutes = '0' + minutes; // Add leading zero if minutes are less than 10
     // Adjust hours to be in 24-hour format
-    if (hours < 10) {
-        hours = '0' + hours; // Add leading zero if hours are less than 10
-    }
+    if (hours < 10) hours = '0' + hours; // Add leading zero if hours are less than 10
 
     // Construct the formatted date string
-    const formattedDate = `${dayOfWeek} ${dayOfMonth}. ${month} ${year} v ${hours}.${minutes}`;
+    const formattedDate = `${dayOfWeek} ${dayOfMonth}. ${month} ${year} v ${hours}:${minutes}:${seconds}`;
 
     return formattedDate;
 };
