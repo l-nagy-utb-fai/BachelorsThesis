@@ -29,8 +29,7 @@ const storage = multer.diskStorage({ //How to store data
         cb(null, 'uploads/');
     },
     filename: (req, file, cb) => { //Name - timestamp + random number
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        cb(null, file.originalname);
     }
 });
 const upload = multer({ storage: storage }); //Initialization
@@ -52,9 +51,8 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
     const filePath = path.join(__dirname, 'uploads', req.file.filename); //To uploads dir.
     convertHeicToJpeg(filePath) //Conversion to JPEG
         .then((jpegPath) => { //Metadata to database insertion
-            const comment = req.body.comment || '';
-            const locationId = req.body.locationId || null;
-            insertMetadata(jpegPath, comment, locationId)
+            const { locationId, status } = parseFileName(req.file.filename);
+            insertMetadata(jpegPath, locationId, status)
                 .then(() => {
                     res.send({ message: 'File uploaded successfully and metadata inserted into the database', file: req.file });
                 })
@@ -71,18 +69,18 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
 
 // New route to handle location uploads
 app.post('/api/uploadLocation', express.json(), async (req, res) => {
-    const locationName = req.body.locationName;
+    const { locationName, comment } = req.body;
 
-    if (!locationName) {
-        return res.status(400).send({ message: 'Location name is required' });
+    if (!locationName || !comment) {
+        return res.status(400).send({ message: 'Location name and comment are required' });
     }
 
     const client = new Client(dbConfig);
     await client.connect();
 
     try {
-        const query = 'INSERT INTO locations (name) VALUES ($1) RETURNING id';
-        const result = await client.query(query, [locationName]);
+        const query = 'INSERT INTO locations (name, comment) VALUES ($1, $2) RETURNING id';
+        const result = await client.query(query, [locationName, comment]);
 
         res.send({ message: 'Location uploaded successfully', locationId: result.rows[0].id });
     } catch (error) {
@@ -150,7 +148,7 @@ app.get('/record', async (req, res) => {
     await client.connect();
     try {
         const query = `
-            SELECT records.*, locations.name AS location_name
+            SELECT records.*, locations.name AS location_name, locations.comment AS comment
             FROM records
             LEFT JOIN locations ON records.location_id = locations.id
             WHERE records.id = $1
@@ -162,7 +160,8 @@ app.get('/record', async (req, res) => {
         const record = result.rows[0];
         const formattedTimestamp = formatTimestamp(record.timestamp);
         record.timestampFormatted = formattedTimestamp;
-        record.locationName = record.location_name;       
+        record.locationName = record.location_name;
+        record.comment = record.comment || '';      
 
         // Get the address using reverse geocoding
         const address = await reverseGeocode(record.latitude, record.longitude);
@@ -189,7 +188,7 @@ const epochToIso8601 = (epoch) => {
 };
 
 //Metadata insertion to database
-const insertMetadata = async (filePath, comment, locationId) => { //By JPEG path
+const insertMetadata = async (filePath, locationId, status) => { //By JPEG path
     const data = fs.readFileSync(filePath);
     const parser = exifParser.create(data); 
     const result = parser.parse();
@@ -212,10 +211,10 @@ const insertMetadata = async (filePath, comment, locationId) => { //By JPEG path
 
     try {
         const query = `
-            INSERT INTO records (timestamp, longitude, latitude, path, comment, location_id, address)
+            INSERT INTO records (timestamp, longitude, latitude, path, location_id, address, status)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
-        const values = [isoTimestamp, longitude, latitude, relativePath, comment, locationId, address];
+        const values = [isoTimestamp, longitude, latitude, relativePath, locationId, address, status];
         await client.query(query, values);
     } finally {
         await client.end();
@@ -246,4 +245,18 @@ const formatTimestamp = (timestamp) => {
     const formattedDate = `${dayOfWeek} ${dayOfMonth}. ${month} ${year} v ${hours}:${minutes}:${seconds}`;
 
     return formattedDate;
+};
+
+// Extract location ID and status from file name
+const parseFileName = (fileName) => {
+    const regex = /^(\d{3})([A-Za-z]{2})/; // Adjust regex to match three digits followed by two letters
+    const match = fileName.match(regex);
+
+    if (match && match.length === 3) {
+        const locationId = parseInt(match[1], 10); // Convert the first part (location ID) to an integer
+        const status = match[2]; // Second part is the status (two letters)
+        return { status, locationId };
+    }
+
+    return { status: null, locationId: null };
 };

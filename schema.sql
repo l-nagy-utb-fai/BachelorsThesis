@@ -8,7 +8,8 @@ CREATE DATABASE database;
 
 CREATE TABLE locations(
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL UNIQUE,
+    comment TEXT NOT NULL
 );
 
 -- Create the records table
@@ -18,7 +19,7 @@ CREATE TABLE records (
     longitude DECIMAL(9, 6) NOT NULL,
     latitude DECIMAL(8, 6) NOT NULL,
     path TEXT NOT NULL,
-    comment TEXT,
     location_id INT REFERENCES locations(id),
-    address TEXT
+    address TEXT,
+    status TEXT CHECK (status IN ('OK', 'GF', 'LT', 'NP', 'DP'))
 );

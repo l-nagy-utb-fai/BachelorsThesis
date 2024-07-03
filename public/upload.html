@@ -46,43 +46,23 @@
 <body>
     <div class="upload-section">
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="heicFile" name="heicFile" accept=".heic" required>
-            <input type="text" id="comment" name="comment" placeholder="Přidat komentář">
-            <select id="locationId" name="locationId" required>
-                <option value="">Výběr lokace</option>
-            </select>          
+            <input type="file" id="heicFile" name="heicFile" accept=".heic" required>       
             <button type="submit">Nahrát fotografii</button>
         </form>
 
         <form id="uploadLocationForm">
             <input type="text" id="locationName" name="locationName" placeholder="Název nové lokace" required>
+            <input type="text" id="locationComment" name="locationComment" placeholder="Přidat komentář k lokaci">
             <button type="submit">Nahrát novou lokaci</button>
         </form>
     </div>
 
     <script>
-        // Fetch and populate locations
-        function fetchLocations() {
-            fetch('/api/locations')
-                .then(response => response.json())
-                .then(locations => {
-                    const locationSelect = document.getElementById('locationId');
-                    locations.forEach(location => {
-                        const option = document.createElement('option');
-                        option.value = location.id;
-                        option.textContent = location.name;
-                        locationSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching locations:', error));
-        }
-
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
             const formData = new FormData();
             const fileField = document.getElementById('heicFile');
-            const commentField = document.getElementById('comment');
             const locationField = document.getElementById('locationId');
 
             if (fileField.files.length === 0) {
@@ -90,14 +70,7 @@
                 return;
             }
 
-            if (!locationField.value) {
-                alert('Please select a location');
-                return;
-            }
-
             formData.append('heicFile', fileField.files[0]);
-            formData.append('comment', commentField.value); // Append comment to FormData
-            formData.append('locationId', locationField.value); // Append locationId to FormData
 
             fetch('/api/upload', {
                 method: 'POST',
@@ -118,28 +91,30 @@
             event.preventDefault();
 
             const locationName = document.getElementById('locationName').value;
+            const locationComment = document.getElementById('locationComment').value;
 
             fetch('/api/uploadLocation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ locationName })
+                body: JSON.stringify({ locationName, comment: locationComment })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to upload location');
+                }
+                return response.json();
+            })
             .then(data => {
                 alert('Location uploaded successfully!');
                 console.log(data);
-                fetchLocations();
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Location upload failed.');
             });
         });
-        
-        // Initial fetch of locations
-        fetchLocations();   
     </script>
 </body>
 </html>

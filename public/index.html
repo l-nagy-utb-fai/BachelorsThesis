@@ -149,14 +149,15 @@
         <div class="content">
             <div class="left">
                 <div class="column" id="photo">Fotografie</div>
+                <div class="column" id="status">Status</div>
             </div>
 
             <div class="middle">
                 <div class="column" id="recordIdDisplay">Pořadí záznamu</div>
                 <div class="column" id="timestamp">Časová stopa</div>
-                <div class="column" id="locationName">Název lokace</div>
                 <div class="column" id="coordinates">Souřadnice</div>
                 <div class="column" id="address">Nejbližší adresa</div>
+                <div class="column" id="locationName">Název lokace</div>
                 <div class="column" id="comments">Komentář</div>
             </div>
 
@@ -228,10 +229,31 @@
                         document.getElementById('recordIdDisplay').innerText = '' + record.id + '.';
                         document.getElementById('photo').innerHTML = '<img src="' + record.path + '" alt="Uploaded Image" onerror="console.error(\'Error loading image:\', this.src)">';
                         document.getElementById('timestamp').innerText = '' + record.timestampFormatted;
-                        document.getElementById('locationName').innerText = '' + (record.locationName || '');
                         document.getElementById('coordinates').innerText = formatCoordinates(record.latitude, record.longitude);
                         document.getElementById('address').innerText = '' + (record.address || '');
-                        document.getElementById('comments').innerText = '' + record.comment || '';
+                        document.getElementById('locationName').innerText = '' + (record.locationName || '');
+                        document.getElementById('comments').innerText = '' + (record.comment || '');
+                        let statusMessage = '';
+                            switch (record.status) {
+                                case 'OK':
+                                    statusMessage = 'V pořádku';
+                                    break;
+                                case 'GF':
+                                    statusMessage = 'Darován';
+                                    break;
+                                case 'LT':
+                                    statusMessage = 'Ztracen';
+                                    break;
+                                case 'NP':
+                                    statusMessage = 'Nevyfocen';
+                                    break;
+                                case 'DP':
+                                    statusMessage = 'S jinou fotografií';
+                                    break;
+                                default:
+                                    statusMessage = 'Status neznámý'
+                            }
+                        document.getElementById('status').innerText = statusMessage;
 
                         // Initialize and display the map
                         initializeMap(record.latitude, record.longitude);
