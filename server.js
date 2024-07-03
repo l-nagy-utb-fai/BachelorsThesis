@@ -4,8 +4,8 @@ const multer = require('multer'); //Upload and storage
 const fs = require('fs'); //Reading and writing TO files
 const { Client } = require('pg'); //Interaction with database
 const exifParser = require('exif-parser'); //Metadata extraction
-const convertHeicToJpeg = require('./convert'); 
-const fetch = require('node-fetch');
+const convertHeicToJpeg = require('./convert');
+const fetch = require('node-fetch'); //Je to k něčemu?
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -44,6 +44,34 @@ app.get('/upload', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'upload.html'));
 });
 
+// Handle HEIC file upload and conversion
+app.post('/api/upload', upload.fields([{ name: 'heicFile' }, { name: 'heicMiniatureFile' }]), async (req, res) => {
+    try {
+        const { heicFile, heicMiniatureFile } = req.files;
+
+        if (!heicFile || !heicMiniatureFile) {
+            return res.status(400).send({ message: 'Both HEIC files are required' });
+        }
+
+        const heicFilePath = path.join(uploadDir, heicFile[0].filename);
+        const heicMiniatureFilePath = path.join(uploadDir, heicMiniatureFile[0].filename);
+
+        // Convert HEIC to JPEG
+        const jpegFilePath = await convertHeicToJpeg(heicFilePath);
+        const jpegMiniatureFilePath = await convertHeicToJpeg(heicMiniatureFilePath);
+
+        // Insert metadata into the database
+        const { locationId, status } = parseFileName(heicFile[0].filename);
+        await insertMetadata(jpegFilePath, jpegMiniatureFilePath, locationId, status);
+
+        res.status(200).send({ message: 'Files uploaded successfully and metadata inserted into the database' });
+    } catch (error) {
+        console.error('Error processing files:', error);
+        res.status(500).send({ message: 'An error occurred during file processing' });
+    }
+});
+
+/*
 app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
     if (!req.file) {
         return res.status(400).send({ message: 'No file uploaded' });
@@ -66,6 +94,7 @@ app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
             res.status(500).send({ message: 'An error occurred during conversion' });
         });
 });
+*/
 
 // New route to handle location uploads
 app.post('/api/uploadLocation', express.json(), async (req, res) => {
@@ -188,7 +217,7 @@ const epochToIso8601 = (epoch) => {
 };
 
 //Metadata insertion to database
-const insertMetadata = async (filePath, locationId, status) => { //By JPEG path
+async function insertMetadata (filePath, miniatureFilePath, locationId, status) { //By JPEG path
     const data = fs.readFileSync(filePath);
     const parser = exifParser.create(data); 
     const result = parser.parse();
@@ -201,6 +230,7 @@ const insertMetadata = async (filePath, locationId, status) => { //By JPEG path
 
     // Convert the absolute path to a relative path
     const relativePath = path.relative(__dirname, filePath).replace(/\\/g, '/');//Absolute path to relative
+    const relativeMiniaturePath = path.relative(__dirname, miniatureFilePath).replace(/\\/g, '/');
 
     // Get the address using reverse geocoding
     const address = await reverseGeocode(latitude, longitude);
@@ -211,10 +241,10 @@ const insertMetadata = async (filePath, locationId, status) => { //By JPEG path
 
     try {
         const query = `
-            INSERT INTO records (timestamp, longitude, latitude, path, location_id, address, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO records (timestamp, longitude, latitude, path, pathMiniature, location_id, address, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `;
-        const values = [isoTimestamp, longitude, latitude, relativePath, locationId, address, status];
+        const values = [isoTimestamp, longitude, latitude, relativePath, relativeMiniaturePath, locationId, address, status];
         await client.query(query, values);
     } finally {
         await client.end();

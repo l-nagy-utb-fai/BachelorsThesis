@@ -19,6 +19,7 @@ CREATE TABLE records (
     longitude DECIMAL(9, 6) NOT NULL,
     latitude DECIMAL(8, 6) NOT NULL,
     path TEXT NOT NULL,
+    pathMiniature TEXT NOT NULL,
     location_id INT REFERENCES locations(id),
     address TEXT,
     status TEXT CHECK (status IN ('OK', 'GF', 'LT', 'NP', 'DP'))

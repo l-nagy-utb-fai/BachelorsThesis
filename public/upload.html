@@ -47,6 +47,7 @@
     <div class="upload-section">
         <form id="uploadForm" enctype="multipart/form-data">
             <input type="file" id="heicFile" name="heicFile" accept=".heic" required>       
+            <input type="file" id="heicMiniatureFile" name="heicMiniatureFile" accept=".heic" required>            
             <button type="submit">Nahrát fotografii</button>
         </form>
 
@@ -63,14 +64,16 @@
 
             const formData = new FormData();
             const fileField = document.getElementById('heicFile');
-            const locationField = document.getElementById('locationId');
+            // const locationField = document.getElementById('locationId');
+            const miniatureFileField = document.getElementById('heicMiniatureFile');
 
-            if (fileField.files.length === 0) {
-                alert('Please select a file to upload');
+            if (fileField.files.length === 0 || miniatureFileField.files.length === 0) {
+                alert('Please select files to upload');
                 return;
             }
 
             formData.append('heicFile', fileField.files[0]);
+            formData.append('heicMiniatureFile', miniatureFileField.files[0]);
 
             fetch('/api/upload', {
                 method: 'POST',
