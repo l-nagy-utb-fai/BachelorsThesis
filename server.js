@@ -75,30 +75,6 @@ app.post('/api/upload', upload.fields([{ name: 'heicFile' }, { name: 'heicMiniat
     }
 });
 
-/*
-app.post('/api/upload', upload.single('heicFile'), (req, res) => { //HEIC upload
-    if (!req.file) {
-        return res.status(400).send({ message: 'No file uploaded' });
-    }
-    const filePath = path.join(__dirname, 'uploads', req.file.filename); //To uploads dir.
-    convertHeicToJpeg(filePath) //Conversion to JPEG
-        .then((jpegPath) => { //Metadata to database insertion
-            const { locationId, status } = parseFileName(req.file.filename);
-            insertMetadata(jpegPath, locationId, status)
-                .then(() => {
-                    res.send({ message: 'File uploaded successfully and metadata inserted into the database', file: req.file });
-                })
-                .catch((error) => {
-                    console.error('Error inserting metadata into database:', error);
-                    res.status(500).send({ message: 'An error occurred during database insertion' });
-                });
-        })
-        .catch((error) => {
-            console.error('Error converting file:', error);
-            res.status(500).send({ message: 'An error occurred during conversion' });
-        });
-});
-*/
 
 // New route to handle location uploads
 app.post('/api/uploadLocation', express.json(), async (req, res) => {
@@ -192,6 +168,9 @@ app.get('/record', async (req, res) => {
         }
         const record = result.rows[0];
         const formattedTimestamp = formatTimestamp(record.timestamp);
+        const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
+        record.latitudeFormatted = formattedCoordinates.formattedLatitude,
+        record.longitudeFormatted = formattedCoordinates.formattedLongitude,
         record.timestampFormatted = formattedTimestamp;
         record.locationName = record.location_name;
         record.comment = record.comment || '';      
@@ -309,7 +288,17 @@ app.get('/api/records', async (req, res) => {
             LEFT JOIN locations ON records.location_id = locations.id
         `;
         const result = await client.query(query);
-        res.json({ records: result.rows });
+        
+        const records = result.rows.map(record => {
+            const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
+            return {
+                ...record,
+                timestamp: formatTimestamp(new Date(record.timestamp)),
+                latitude: formattedCoordinates.formattedLatitude,
+                longitude: formattedCoordinates.formattedLongitude
+            };
+        });
+        res.json({ records });
     } catch (error) {
         console.error('Error fetching records from database:', error);
         res.status(500).json({ error: 'Failed to fetch records' });
@@ -317,3 +306,36 @@ app.get('/api/records', async (req, res) => {
         await client.end();
     }
 });
+
+       // Function to convert decimal degrees to degrees, minutes, and seconds
+       const decimalToDMS = (decimal) => {
+        const degrees = Math.floor(decimal);
+        const minutesDecimal = (decimal - degrees) * 60;
+        const minutes = Math.floor(minutesDecimal);
+        const seconds = ((minutesDecimal - minutes) * 60).toFixed(1);
+
+        return { degrees, minutes, seconds };
+    };
+
+        // Function to format coordinates based on provided rules
+        const formatCoordinates = (latitude, longitude) => {
+            let latitudeSuffix = latitude < 0 ? 'J' : 'S';
+            let longitudeSuffix = longitude < 0 ? 'Z' : 'V';
+
+            // Convert latitude and longitude to absolute values for formatting
+            const absLatitude = Math.abs(latitude);
+            const absLongitude = Math.abs(longitude);
+
+            // Convert decimal coordinates to DMS format
+            const latitudeDMS = decimalToDMS(absLatitude);
+            const longitudeDMS = decimalToDMS(absLongitude);
+
+            // Format latitude and longitude as DMS
+            const formattedLatitude = `${latitudeDMS.degrees}° ${latitudeDMS.minutes}' ${latitudeDMS.seconds}" ${latitudeSuffix}`;
+            const formattedLongitude = `${longitudeDMS.degrees}° ${longitudeDMS.minutes}' ${longitudeDMS.seconds}" ${longitudeSuffix}`;
+
+            return {
+                formattedLatitude,
+                formattedLongitude
+            };
+        };
