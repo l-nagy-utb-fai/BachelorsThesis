@@ -148,7 +148,10 @@
         </div>
         <div class="content">
             <div class="left">
-                <div class="column" id="photo">Fotografie</div>
+                <div class="column" id="photo">
+                    <div id="photoText" style="display: block;">Fotografie</div>
+                    <img id="photoImage" src="" alt="" onerror="console.error('Error loading image:', this.src)">
+                </div>
                 <div class="column" id="status">Status</div>
             </div>
 
@@ -224,10 +227,34 @@
                 .then(data => {
                     if (data.error) {
                         document.getElementById('recordIdDisplay').innerText = 'ID: ' + data.error;
+                        document.getElementById('photoText').style.display = 'block'; // Show the "Fotografie:" text
+                        document.getElementById('photoImage').src = ''; // Clear the photo
                     } else {
                         const record = data.record;
                         document.getElementById('recordIdDisplay').innerText = '' + record.id + '.';
-                        document.getElementById('photo').innerHTML = '<img src="' + record.path + '" alt="Uploaded Image" onerror="console.error(\'Error loading image:\', this.src)">';
+                        const photoImage = document.getElementById('photoImage');
+                            photoImage.src = record.pathminiature; // Initially set to pathminiature
+                            // Handle image load and error events
+                            photoImage.onload = () => {
+                                document.getElementById('photoText').style.display = 'none'; // Hide the "Fotografie:" text on successful load
+                            };
+                            photoImage.onerror = () => {
+                                document.getElementById('photoText').style.display = 'block'; // Show the "Fotografie:" text on error
+                                photoImage.src = ''; // Clear the photo source on error
+                            };
+                            // Handle mouseenter and mouseleave events
+                            photoImage.addEventListener('mouseenter', () => {
+                                photoImage.src = record.path; // Change to full path on mouseenter
+                                document.getElementById('photoText').style.display = 'none'; // Hide the "Fotografie:" text
+                            });
+                            photoImage.addEventListener('mouseleave', () => {
+                                photoImage.src = record.pathminiature; // Change back to pathminiature on mouseleave
+                                if (!record.pathminiature) {
+                                    document.getElementById('photoText').style.display = 'block'; // Show the "Fotografie:" text if pathminiature is empty
+                                } else {
+                                    document.getElementById('photoText').style.display = 'none'; // Hide the "Fotografie:" text if pathminiature is not empty
+                                }
+                            });
                         document.getElementById('timestamp').innerText = '' + record.timestampFormatted;
                         document.getElementById('coordinates').innerText = formatCoordinates(record.latitude, record.longitude);
                         document.getElementById('address').innerText = '' + (record.address || '');
