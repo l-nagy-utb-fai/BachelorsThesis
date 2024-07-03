@@ -18,21 +18,27 @@
         th {
             background-color: #f2f2f2;
         }
+        .thumbnail {
+            max-width: 50px;
+            max-height: 50px;
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <h1>Database Records</h1>
+    <h1>Seznam záznamů</h1>
     <table id="recordsTable">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Timestamp</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Location Name</th>
+                <th>Pořadí záznamu</th>
+                <th>Miniatura</th>
                 <th>Status</th>
-                <th>Address</th>
-                <th>Comment</th>
+                <th>Časová stopa</th>
+                <th>Zeměpisná šířka</th>
+                <th>Zeměpisná délka</th>
+                <th>Nejbližší adresa</th>
+                <th>Název lokace</th>
+                <th>Komentář</th>
             </tr>
         </thead>
         <tbody id="recordsTableBody">
@@ -53,13 +59,14 @@
                     records.forEach(record => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${record.id}</td>
+                            <td>${record.id}.</td>
+                            <td><img src="${record.pathminiature}" alt="Thumbnail" class="thumbnail"></td>
+                            <td>${record.status}</td>
                             <td>${record.timestamp}</td>
                             <td>${record.latitude}</td>
                             <td>${record.longitude}</td>
-                            <td>${record.location_name}</td>
-                            <td>${record.status}</td>
                             <td>${record.address}</td>
+                            <td>${record.location_name}</td>
                             <td>${record.location_comment}</td>
                         `;
                         tableBody.appendChild(row);

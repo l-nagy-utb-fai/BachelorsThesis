@@ -231,27 +231,7 @@
                         document.getElementById('address').innerText = '' + (record.address || '');
                         document.getElementById('locationName').innerText = '' + (record.locationName || '');
                         document.getElementById('comments').innerText = '' + (record.comment || '');
-                        let statusMessage = '';
-                            switch (record.status) {
-                                case 'OK':
-                                    statusMessage = 'V pořádku';
-                                    break;
-                                case 'GF':
-                                    statusMessage = 'Darován';
-                                    break;
-                                case 'LT':
-                                    statusMessage = 'Ztracen';
-                                    break;
-                                case 'NP':
-                                    statusMessage = 'Nevyfocen';
-                                    break;
-                                case 'DP':
-                                    statusMessage = 'S jinou fotografií';
-                                    break;
-                                default:
-                                    statusMessage = 'Status neznámý'
-                            }
-                        document.getElementById('status').innerText = statusMessage;
+                        document.getElementById('status').innerText = record.statusTransformed;
 
                         // Initialize and display the map
                         initializeMap(record.latitude, record.longitude);

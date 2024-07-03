@@ -169,11 +169,13 @@ app.get('/record', async (req, res) => {
         const record = result.rows[0];
         const formattedTimestamp = formatTimestamp(record.timestamp);
         const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
+        const translatedStatus = translateStatus(record.status);
         record.latitudeFormatted = formattedCoordinates.formattedLatitude,
         record.longitudeFormatted = formattedCoordinates.formattedLongitude,
         record.timestampFormatted = formattedTimestamp;
         record.locationName = record.location_name;
-        record.comment = record.comment || '';      
+        record.comment = record.comment || '';
+        record.statusTransformed = translatedStatus;      
 
         // Get the address using reverse geocoding
         const address = await reverseGeocode(record.latitude, record.longitude);
@@ -282,7 +284,7 @@ app.get('/api/records', async (req, res) => {
     try {
         const query = `
             SELECT records.id, records.timestamp, records.latitude, records.longitude,
-                   records.status, records.address,
+                   records.status, records.address, records.pathminiature,
                    locations.name AS location_name, locations.comment AS location_comment
             FROM records
             LEFT JOIN locations ON records.location_id = locations.id
@@ -295,7 +297,8 @@ app.get('/api/records', async (req, res) => {
                 ...record,
                 timestamp: formatTimestamp(new Date(record.timestamp)),
                 latitude: formattedCoordinates.formattedLatitude,
-                longitude: formattedCoordinates.formattedLongitude
+                longitude: formattedCoordinates.formattedLongitude,
+                status: translateStatus(record.status)
             };
         });
         res.json({ records });
@@ -339,3 +342,21 @@ app.get('/api/records', async (req, res) => {
                 formattedLongitude
             };
         };
+
+// Function to translate status
+const translateStatus = (status) => {
+    switch (status) {
+        case 'OK':
+            return 'V pořádku';
+        case 'GF':
+            return 'Darován';
+        case 'LT':
+            return 'Ztracen';
+        case 'NP':
+            return 'Nevyfocen';
+        case 'DP':
+            return 'S jinou fotografií';
+        default:
+            return 'Status neznámý';
+    }
+};
