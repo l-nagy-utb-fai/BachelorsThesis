@@ -43,6 +43,10 @@ app.get('/', (req, res) => {
 app.get('/upload', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'upload.html'));
 });
+app.get('/database', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'database.html'));
+});
+
 
 // Handle HEIC file upload and conversion
 app.post('/api/upload', upload.fields([{ name: 'heicFile' }, { name: 'heicMiniatureFile' }]), async (req, res) => {
@@ -290,3 +294,26 @@ const parseFileName = (fileName) => {
 
     return { status: null, locationId: null };
 };
+
+// Route to fetch records
+app.get('/api/records', async (req, res) => {
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const query = `
+            SELECT records.id, records.timestamp, records.latitude, records.longitude,
+                   records.status, records.address,
+                   locations.name AS location_name, locations.comment AS location_comment
+            FROM records
+            LEFT JOIN locations ON records.location_id = locations.id
+        `;
+        const result = await client.query(query);
+        res.json({ records: result.rows });
+    } catch (error) {
+        console.error('Error fetching records from database:', error);
+        res.status(500).json({ error: 'Failed to fetch records' });
+    } finally {
+        await client.end();
+    }
+});

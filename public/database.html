@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Records</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database Records</h1>
+    <table id="recordsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Location Name</th>
+                <th>Status</th>
+                <th>Address</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody id="recordsTableBody">
+            <!-- Table rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fetch records from the server
+            fetch('/api/records')
+                .then(response => response.json())
+                .then(data => {
+                    const records = data.records;
+                    const tableBody = document.getElementById('recordsTableBody');
+                    tableBody.innerHTML = ''; // Clear previous table rows
+
+                    records.forEach(record => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${record.id}</td>
+                            <td>${record.timestamp}</td>
+                            <td>${record.latitude}</td>
+                            <td>${record.longitude}</td>
+                            <td>${record.location_name}</td>
+                            <td>${record.status}</td>
+                            <td>${record.address}</td>
+                            <td>${record.location_comment}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching records:', error);
+                    alert('Failed to retrieve records.');
+                });
+        });
+    </script>
+</body>
+</html>
