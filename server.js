@@ -78,7 +78,7 @@ app.post('/api/upload', upload.fields([{ name: 'heicFile' }, { name: 'heicMiniat
 
 // New route to handle location uploads
 app.post('/api/uploadLocation', express.json(), async (req, res) => {
-    const { locationName, comment } = req.body;
+    const { locationName, comment, anonymized } = req.body;
 
     if (!locationName || !comment) {
         return res.status(400).send({ message: 'Location name and comment are required' });
@@ -88,8 +88,8 @@ app.post('/api/uploadLocation', express.json(), async (req, res) => {
     await client.connect();
 
     try {
-        const query = 'INSERT INTO locations (name, comment) VALUES ($1, $2) RETURNING id';
-        const result = await client.query(query, [locationName, comment]);
+        const query = 'INSERT INTO locations (name, comment, anonymized) VALUES ($1, $2, $3) RETURNING id';
+        const result = await client.query(query, [locationName, comment, anonymized]);
 
         res.send({ message: 'Location uploaded successfully', locationId: result.rows[0].id });
     } catch (error) {
@@ -264,7 +264,7 @@ const formatTimestamp = (timestamp) => {
 
 // Extract location ID and status from file name
 const parseFileName = (fileName) => {
-    const regex = /^(\d{3})([A-Za-z]{2})/; // Adjust regex to match three digits followed by two letters
+    const regex = /^(\d{3})([A-Za-z]{1})/; // Adjust regex to match three digits followed by two letters
     const match = fileName.match(regex);
 
     if (match && match.length === 3) {
@@ -283,9 +283,31 @@ app.get('/api/records', async (req, res) => {
 
     try {
         const query = `
-            SELECT records.id, records.timestamp, records.latitude, records.longitude,
-                   records.status, records.address, records.pathminiature,
-                   locations.name AS location_name, locations.comment AS location_comment
+            SELECT 
+                records.id, 
+                records.timestamp, 
+                    CASE
+                        WHEN locations.anonymized THEN '0.0000'
+                        ELSE records.latitude
+                    END AS latitude,
+                    CASE
+                        WHEN locations.anonymized THEN '0.000'
+                        ELSE records.longitude
+                    END AS longitude,
+                    CASE
+                        WHEN locations.anonymized THEN 'Adresa anonymizována'
+                        ELSE records.address
+                    END AS address,
+                    CASE
+                        WHEN locations.anonymized THEN 'Lokace anonymizována'
+                        ELSE COALESCE(locations.name, 'N/A')
+                    END AS location_name,
+                    CASE
+                        WHEN locations.anonymized THEN 'Komentář anonymizován'
+                        ELSE COALESCE(locations.comment, '')
+                    END AS location_comment, 
+                    records.status, 
+                    records.pathminiature
             FROM records
             LEFT JOIN locations ON records.location_id = locations.id
         `;
@@ -294,11 +316,15 @@ app.get('/api/records', async (req, res) => {
         const records = result.rows.map(record => {
             const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
             return {
-                ...record,
+                id: record.id,
                 timestamp: formatTimestamp(new Date(record.timestamp)),
                 latitude: formattedCoordinates.formattedLatitude,
                 longitude: formattedCoordinates.formattedLongitude,
-                status: translateStatus(record.status)
+                status: translateStatus(record.status),
+                address: record.address,
+                locationName: record.location_name,
+                locationComment: record.location_comment,
+                pathMiniature: record.pathminiature
             };
         });
         res.json({ records });
@@ -346,15 +372,21 @@ app.get('/api/records', async (req, res) => {
 // Function to translate status
 const translateStatus = (status) => {
     switch (status) {
-        case 'OK':
+        case 'V':
             return 'V pořádku';
-        case 'GF':
+        case 'D':
             return 'Darován';
-        case 'LT':
+        case 'Z':
             return 'Ztracen';
-        case 'NP':
+        case 'N':
             return 'Nevyfocen';
-        case 'DP':
+        case 'L':
+            return 'Bez zadané lokace';
+        case 'G':
+            return 'Byl mi darován';
+        case 'S':
+            return 'Status není určitelný';
+        case 'J':
             return 'S jinou fotografií';
         default:
             return 'Status neznámý';

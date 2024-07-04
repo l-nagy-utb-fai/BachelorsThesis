@@ -54,6 +54,8 @@
         <form id="uploadLocationForm">
             <input type="text" id="locationName" name="locationName" placeholder="Název nové lokace" required>
             <input type="text" id="locationComment" name="locationComment" placeholder="Přidat komentář k lokaci">
+            <label for="anonymized">Anonymizovat lokaci:</label>
+            <input type="checkbox" id="anonymized" name="anonymized" value="true">
             <button type="submit">Nahrát novou lokaci</button>
         </form>
     </div>
@@ -95,13 +97,14 @@
 
             const locationName = document.getElementById('locationName').value;
             const locationComment = document.getElementById('locationComment').value;
+            const anonymized = document.getElementById('anonymized').checked;
 
             fetch('/api/uploadLocation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ locationName, comment: locationComment })
+                body: JSON.stringify({ locationName, comment: locationComment, anonymized })
             })
             .then(response => {
                 if (!response.ok) {

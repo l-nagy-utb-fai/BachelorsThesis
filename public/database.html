@@ -60,14 +60,14 @@
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${record.id}.</td>
-                            <td><img src="${record.pathminiature}" alt="Thumbnail" class="thumbnail"></td>
+                            <td><img src="${record.pathMiniature}" alt="Thumbnail" class="thumbnail"></td>
                             <td>${record.status}</td>
                             <td>${record.timestamp}</td>
                             <td>${record.latitude}</td>
                             <td>${record.longitude}</td>
                             <td>${record.address}</td>
-                            <td>${record.location_name}</td>
-                            <td>${record.location_comment}</td>
+                            <td>${record.locationName}</td>
+                            <td>${record.locationComment}</td>
                         `;
                         tableBody.appendChild(row);
                     });

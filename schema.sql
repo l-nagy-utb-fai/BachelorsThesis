@@ -9,7 +9,8 @@ CREATE DATABASE database;
 CREATE TABLE locations(
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
-    comment TEXT NOT NULL
+    comment TEXT NOT NULL,
+    anonymized BOOLEAN DEFAULT false
 );
 
 -- Create the records table
@@ -22,5 +23,5 @@ CREATE TABLE records (
     pathMiniature TEXT NOT NULL,
     location_id INT REFERENCES locations(id),
     address TEXT,
-    status TEXT CHECK (status IN ('OK', 'GF', 'LT', 'NP', 'DP'))
+    status TEXT CHECK (status IN ('V', 'D', 'Z', 'N', 'L', 'G', 'S', 'J'))
 );
