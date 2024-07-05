@@ -81,10 +81,26 @@
 
         <div class="location-list" id="locationList"></div>
         <div class="status-list" id="statusList"></div>
+        <button class="button" id="runHelloWorldButton">Run Hello World Script</button>
 
     </div>
 
     <script>
+        document.getElementById('runHelloWorldButton').addEventListener('click', async () => {
+            console.log('Run Hello World button clicked');
+            try {
+                const response = await fetch('/api/runHelloWorld');
+                if (!response.ok) {
+                    throw new Error('Failed to run script');
+                }
+                const result = await response.json();
+                console.log('Script response:', result.message);
+                alert(result.message); // Show the output in an alert (adjust as needed)
+            } catch (error) {
+                console.error('Error running script:', error);
+                alert('Failed to run script.');
+            }
+        });
 
 async function fetchAndDisplayStatuses() {
             try {

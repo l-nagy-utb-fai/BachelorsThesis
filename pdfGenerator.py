@@ -1,0 +1,88 @@
+import psycopg2
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+# Database connection parameters
+db_config = {
+    'host': 'localhost',
+    'database': 'database',
+    'user': 'postgres',
+    'password': 'testovanikryptologie',
+    'port': '5432'  # Your database port
+}
+
+# Function to fetch records from database within a given ID range
+def fetch_records_in_range(min_id, max_id):
+    try:
+        # Connect to PostgreSQL database
+        conn = psycopg2.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Query to fetch records within the ID range
+        query = """
+            SELECT id, name, comment, anonymized
+            FROM locations
+            WHERE id BETWEEN %s AND %s
+            ORDER BY id
+        """
+        cursor.execute(query, (min_id, max_id))
+        
+        # Fetch all records
+        records = cursor.fetchall()
+        
+        # Commit and close database connection
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return records
+    except psycopg2.Error as e:
+        print(f"Error retrieving records: {e}")
+        return None
+
+# Function to generate PDF from fetched records
+def generate_pdf(records, output_file):
+    try:
+        # Create canvas for PDF
+        c = canvas.Canvas(output_file, pagesize=letter)
+        
+        # Set up PDF content
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(100, 750, "Records from Database")
+        c.setFont("Helvetica", 10)
+        c.drawString(100, 730, "-" * 60)
+        
+        # Iterate through records and write to PDF
+        y = 700
+        for record in records:
+            id, name, comment, anonymized = record
+            c.drawString(100, y, f"ID: {id}")
+            c.drawString(200, y, f"Name: {name}")
+            c.drawString(350, y, f"Comment: {comment}")
+            c.drawString(500, y, f"Anonymized: {'Yes' if anonymized else 'No'}")
+            y -= 20
+        
+        # Save PDF
+        c.save()
+        
+        print(f"PDF generated successfully: {output_file}")
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+
+# Main function to execute the script
+def main():
+    min_id = 1  # Minimum ID in the range
+    max_id = 10  # Maximum ID in the range
+    output_file = "records_report.pdf"  # Output PDF file name
+    
+    # Fetch records from database
+    records = fetch_records_in_range(min_id, max_id)
+    
+    if records:
+        # Generate PDF with fetched records
+        generate_pdf(records, output_file)
+    else:
+        print("No records found or error occurred. PDF not generated.")
+
+if __name__ == "__main__":
+    main()

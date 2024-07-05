@@ -6,6 +6,7 @@ const { Client } = require('pg'); //Interaction with database
 const exifParser = require('exif-parser'); //Metadata extraction
 const convertHeicToJpeg = require('./convert');
 const fetch = require('node-fetch'); //Je to k něčemu?
+const { spawn } = require('child_process');
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -448,4 +449,36 @@ const possibleStatuses = ['V - V pořádku', 'D - Darován', 'Z - Ztracen', 'N -
 
 app.get('/api/statuses', (req, res) => {
     res.json({statuses: possibleStatuses});
+});
+
+app.get('/api/runHelloWorld', (req, res) => {
+    console.log('Hello World script endpoint called');
+
+    try {
+        const pythonProcess = spawn('python', ['pdfGenerator.py']);
+
+        pythonProcess.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+            res.status(200).json({ message: data.toString() });
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+            res.status(500).json({ message: 'Error running script' });
+        });
+
+        pythonProcess.on('error', (err) => {
+            console.error('Failed to start subprocess:', err);
+            res.status(500).json({ message: 'Failed to start subprocess' });
+        });
+
+        pythonProcess.on('close', (code) => {
+            if (code !== 0) {
+                res.status(500).json({ message: 'Script execution failed' });
+            }
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Failed to execute script' });
+    }
 });
