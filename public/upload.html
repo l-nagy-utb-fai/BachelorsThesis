@@ -51,6 +51,17 @@
             display: inline-block;
             margin-right: 20px; /* Add spacing between location items */
         }
+        .status-list {
+            margin-bottom: 20px;
+        }
+        .status-item {
+            margin-right: 10px;
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -68,11 +79,41 @@
             <button type="submit">Nahrát novou lokaci</button>
         </form>
 
-        <div class="location-list" id="locationList"> <!-- Location list will be dynamically populated here -->
-        </div>
+        <div class="location-list" id="locationList"></div>
+        <div class="status-list" id="statusList"></div>
+
     </div>
 
     <script>
+
+async function fetchAndDisplayStatuses() {
+            try {
+                const response = await fetch('/api/statuses'); // Fetch statuses from backend
+                if (!response.ok) {
+                    throw new Error('Failed to fetch statuses');
+                }
+                const { statuses } = await response.json();
+                const statusListContainer = document.getElementById('statusList');
+
+                // Clear previous content
+                statusListContainer.innerHTML = '';
+
+                // Create and append status items to the list
+                statuses.forEach(status => {
+                    const statusItem = document.createElement('div');
+                    statusItem.classList.add('status-item');
+                    statusItem.textContent = status;
+                    statusListContainer.appendChild(statusItem);
+                });
+            } catch (error) {
+                console.error('Error fetching statuses:', error);
+                alert('Failed to fetch statuses.');
+            }
+        }
+
+        // Fetch and display statuses on page load
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayStatuses);
+        
         // Function to fetch and display locations
         async function fetchAndDisplayLocations() {
             try {

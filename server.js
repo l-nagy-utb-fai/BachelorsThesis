@@ -443,3 +443,9 @@ const translateStatus = (status) => {
             return 'Status neznámý';
     }
 };
+
+const possibleStatuses = ['V - V pořádku', 'D - Darován', 'Z - Ztracen', 'N - Nevyfocen', 'L - Bez zadané lokace', 'G - Byl mi darován', 'S - Status není určitelný', 'J - S jinou fotografií'];
+
+app.get('/api/statuses', (req, res) => {
+    res.json({statuses: possibleStatuses});
+});
