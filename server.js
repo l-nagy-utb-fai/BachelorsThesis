@@ -157,11 +157,37 @@ app.get('/record', async (req, res) => {
     await client.connect();
     try {
         const query = `
-            SELECT records.*, locations.name AS location_name, locations.comment AS comment
+            SELECT 
+                records.id, 
+                records.timestamp, 
+                CASE
+                    WHEN locations.anonymized THEN '0.0000'
+                    ELSE records.latitude
+                END AS latitude,
+                CASE
+                    WHEN locations.anonymized THEN '0.000'
+                    ELSE records.longitude
+                END AS longitude,
+                CASE
+                    WHEN locations.anonymized THEN 'Adresa anonymizována'
+                    ELSE records.address
+                END AS address,
+                CASE
+                    WHEN locations.anonymized THEN 'Lokace anonymizována'
+                    ELSE COALESCE(locations.name, 'N/A')
+                END AS location_name,
+                CASE
+                    WHEN locations.anonymized THEN 'Komentář anonymizován'
+                    ELSE COALESCE(locations.comment, '')
+                END AS location_comment, 
+                records.status, 
+                records.pathminiature,
+                records.path
             FROM records
             LEFT JOIN locations ON records.location_id = locations.id
             WHERE records.id = $1
         `;
+
         const result = await client.query(query, [recordId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Record not found' });
@@ -170,18 +196,23 @@ app.get('/record', async (req, res) => {
         const formattedTimestamp = formatTimestamp(record.timestamp);
         const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
         const translatedStatus = translateStatus(record.status);
-        record.latitudeFormatted = formattedCoordinates.formattedLatitude,
-        record.longitudeFormatted = formattedCoordinates.formattedLongitude,
-        record.timestampFormatted = formattedTimestamp;
-        record.locationName = record.location_name;
-        record.comment = record.comment || '';
-        record.statusTransformed = translatedStatus;      
+        
+        const formattedRecord = {
+            id: record.id,
+            timestampFormatted: formattedTimestamp,
+            latitudeFormatted: formattedCoordinates.formattedLatitude,
+            longitudeFormatted: formattedCoordinates.formattedLongitude,
+            latitudeRaw: record.latitude,
+            longitudeRaw: record.longitude,
+            address: record.address,
+            locationName: record.location_name,
+            comment: record.location_comment,
+            statusTransformed: translatedStatus,
+            pathminiature: record.pathminiature,
+            path: record.path
+        };     
 
-        // Get the address using reverse geocoding
-        const address = await reverseGeocode(record.latitude, record.longitude);
-        record.address = address;    
-
-        res.json({ record }); //Retrieving data
+        res.json({ record: formattedRecord }); //Retrieving data
     } catch (error) {
         console.error('Error retrieving record from database:', error);
         res.status(500).json({ error: 'Internal server error' });

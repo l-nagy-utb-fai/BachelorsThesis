@@ -187,7 +187,7 @@
             }).addTo(map);
 
             L.marker([latitude, longitude]).addTo(map)
-                .bindPopup('Location')
+                .bindPopup('Nalezen zde')
                 .openPopup();
         };
 
@@ -233,8 +233,16 @@
                         document.getElementById('comments').innerText = '' + (record.comment || '');
                         document.getElementById('status').innerText = record.statusTransformed;
 
-                        // Initialize and display the map
-                        initializeMap(record.latitude, record.longitude);
+                        // Check if coordinates are anonymized
+                        const mapDiv = document.getElementById('map');
+                        if (record.latitudeFormatted === '0.0000' && record.longitudeFormatted === '0.000') {
+                            console.log('Coordinates are anonymized');
+                            mapDiv.innerText = 'Mapa anonymizována'; // Display message
+                        } else {
+                            console.log('Coordinates are not anonymized');
+                            mapDiv.innerText = '';
+                            initializeMap(record.latitudeRaw, record.longitudeRaw); // Initialize and display the map
+                        }
                     }
                 })
                 .catch(error => {
