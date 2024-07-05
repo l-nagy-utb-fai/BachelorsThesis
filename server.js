@@ -123,7 +123,7 @@ app.get('/api/locations', async (req, res) => {
     await client.connect();
 
     try {
-        const result = await client.query('SELECT id, name FROM locations');
+        const result = await client.query('SELECT id, name, comment, anonymized FROM locations');
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching locations from database:', error);
