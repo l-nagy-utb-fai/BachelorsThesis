@@ -20,10 +20,11 @@ def fetch_records_in_range(min_id, max_id):
 
         # Query to fetch records within the ID range
         query = """
-            SELECT id, name, comment, anonymized
-            FROM locations
-            WHERE id BETWEEN %s AND %s
-            ORDER BY id
+            SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name
+            FROM records r
+            JOIN locations l ON r.location_id = l.id
+            WHERE r.id BETWEEN %s AND %s
+            ORDER BY r.id
         """
         cursor.execute(query, (min_id, max_id))
         
@@ -55,11 +56,12 @@ def generate_pdf(records, output_file):
         # Iterate through records and write to PDF
         y = 700
         for record in records:
-            id, name, comment, anonymized = record
+            id, timestamp, longitude, latitude, name = record
             c.drawString(100, y, f"ID: {id}")
-            c.drawString(200, y, f"Name: {name}")
-            c.drawString(350, y, f"Comment: {comment}")
-            c.drawString(500, y, f"Anonymized: {'Yes' if anonymized else 'No'}")
+            c.drawString(200, y, f"Timestamp: {timestamp}")
+            c.drawString(350, y, f"Longitude: {longitude}")
+            c.drawString(450, y, f"Latitude: {latitude}")
+            c.drawString(550, y, f"Location Name: {name}")
             y -= 20
         
         # Save PDF
