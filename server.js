@@ -49,24 +49,41 @@ app.get('/database', (req, res) => {
 
 
 // Handle HEIC file upload and conversion
-app.post('/api/upload', upload.fields([{ name: 'heicFile' }, { name: 'heicMiniatureFile' }]), async (req, res) => {
+app.post('/api/upload', upload.array('files'), async (req, res) => {
+    const client = new Client(dbConfig); // Initialize the database client
+    await client.connect();
+    
     try {
-        const { heicFile, heicMiniatureFile } = req.files;
-
-        if (!heicFile || !heicMiniatureFile) {
-            return res.status(400).send({ message: 'Both HEIC files are required' });
+        const files = req.files;
+        if (!files || files.length === 0) {
+            return res.status(400).send({ message: 'No files uploaded' });
         }
 
-        const heicFilePath = path.join(uploadDir, heicFile[0].filename);
-        const heicMiniatureFilePath = path.join(uploadDir, heicMiniatureFile[0].filename);
+        // Separate files into Original and Miniature pairs
+        const filePairs = {};
+        files.forEach(file => {
+            const { ID, status, locationId, type } = parseFileName(file.originalname);
+            if (!filePairs[ID]) {
+                filePairs[ID] = { ID, status, locationId };
+            }
+            filePairs[ID][type === 'O' ? 'original' : 'miniature'] = file;
+        });
 
-        // Convert HEIC to JPEG
-        const jpegFilePath = await convertHeicToJpeg(heicFilePath);
-        const jpegMiniatureFilePath = await convertHeicToJpeg(heicMiniatureFilePath);
+        for (const key in filePairs) {
+            const { ID, status, locationId, original, miniature } = filePairs[key];
+            if (!original || !miniature) {
+                return res.status(400).send({ message: 'Original and Miniature file pair not found' });
+            }
 
-        // Insert metadata into the database
-        const { locationId, status } = parseFileName(heicFile[0].filename);
-        await insertMetadata(jpegFilePath, jpegMiniatureFilePath, locationId, status);
+            const originalPath = path.join(uploadDir, original.filename);
+            const miniaturePath = path.join(uploadDir, miniature.filename);
+
+            const jpegOriginalPath = await convertHeicToJpeg(originalPath);
+            const jpegMiniaturePath = await convertHeicToJpeg(miniaturePath);
+
+            // Insert metadata for the "Original" file
+            await insertMetadata(jpegOriginalPath, jpegMiniaturePath, locationId, status);
+        }
 
         res.status(200).send({ message: 'Files uploaded successfully and metadata inserted into the database' });
     } catch (error) {
@@ -295,16 +312,19 @@ const formatTimestamp = (timestamp) => {
 
 // Extract location ID and status from file name
 const parseFileName = (fileName) => {
-    const regex = /^(\d{3})([A-Za-z]{1})/; // Adjust regex to match three digits followed by two letters
+    const regex = /^(\d{4})\+(\d{3})\+([A-Za-z])\+([OM])\.heic$/i; // Match 4 digits, followed by anything but '+', followed by 3 digits, a status letter, and O/M    const match = fileName.match(regex);
     const match = fileName.match(regex);
 
-    if (match && match.length === 3) {
-        const locationId = parseInt(match[1], 10); // Convert the first part (location ID) to an integer
-        const status = match[2]; // Second part is the status (two letters)
-        return { status, locationId };
+    if (match && match.length === 5) {
+        const ID = parseInt(match[1], 10);
+        const locationId = parseInt(match[2], 10); // Convert the first part (location ID) to an integer
+        const status = match[3]; // Fourth group is status
+        const type = match[4]; // Fifth group is O/M for Original/Miniature
+        return { ID, status, locationId, type };
     }
 
-    return { status: null, locationId: null };
+    throw new Error(`Invalid file name format: ${fileName}`);
+   // return { status: null, locationId: null, type: null };
 };
 
 // Route to fetch records

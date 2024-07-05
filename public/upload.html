@@ -46,9 +46,8 @@
 <body>
     <div class="upload-section">
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="heicFile" name="heicFile" accept=".heic" required>       
-            <input type="file" id="heicMiniatureFile" name="heicMiniatureFile" accept=".heic" required>            
-            <button type="submit">Nahrát fotografii</button>
+            <input type="file" id="heicFile" name="heicFiles" multiple accept=".heic">
+            <input type="submit" value="Upload">
         </form>
 
         <form id="uploadLocationForm">
@@ -61,35 +60,31 @@
     </div>
 
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const formData = new FormData();
-            const fileField = document.getElementById('heicFile');
-            // const locationField = document.getElementById('locationId');
-            const miniatureFileField = document.getElementById('heicMiniatureFile');
-
-            if (fileField.files.length === 0 || miniatureFileField.files.length === 0) {
-                alert('Please select files to upload');
-                return;
+            const files = document.getElementById('heicFile').files;
+            for (let i = 0; i < files.length; i++) {
+               formData.append('files', files[i]);
             }
 
-            formData.append('heicFile', fileField.files[0]);
-            formData.append('heicMiniatureFile', miniatureFileField.files[0]);
-
-            fetch('/api/upload', {
+            try{
+                const response = fetch('/api/upload', {
                 method: 'POST',
                 body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('File uploaded successfully!');
-                console.log(data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('File upload failed.');
-            });
+                });
+            
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const result = await response.json();
+                console.log('Upload successful:', result.message);
+
+            } catch (error) {
+                console.error('Error uploading files:', error);
+            }
         });
 
         document.getElementById('uploadLocationForm').addEventListener('submit', function(event) {
