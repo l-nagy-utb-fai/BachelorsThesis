@@ -4,26 +4,21 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import sys
 import os
+from datetime import datetime
 
-# Database connection parameters
 db_config = {
     'host': 'localhost',
     'database': 'database',
     'user': 'postgres',
     'password': 'testovanikryptologie',
-    'port': '5432'  # Your database port
+    'port': '5432'
 }
-
 mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/Mapky'
 
-# Function to fetch records from database within a given ID range
 def fetch_records_in_range(min_id, max_id):
     try:
-        # Connect to PostgreSQL database
         conn = psycopg2.connect(**db_config)
         cursor = conn.cursor()
-
-        # Query to fetch records within the ID range
         query = """
             SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name, r.path
             FROM records r
@@ -31,12 +26,8 @@ def fetch_records_in_range(min_id, max_id):
             WHERE r.id BETWEEN %s AND %s
             ORDER BY r.id
         """
-        cursor.execute(query, (min_id, max_id))
-        
-        # Fetch all records
-        records = cursor.fetchall()
-        
-        # Commit and close database connection
+        cursor.execute(query, (min_id, max_id))        
+        records = cursor.fetchall()        
         conn.commit()
         cursor.close()
         conn.close()
@@ -45,14 +36,49 @@ def fetch_records_in_range(min_id, max_id):
     except psycopg2.Error as e:
         print(f"Error retrieving records: {e}")
         return None
+    
+def decimal_to_dms(decimal):
+    degrees = int(decimal)
+    minutes_decimal = abs(decimal - degrees) * 60
+    minutes = int(minutes_decimal)
+    seconds = round((minutes_decimal - minutes) * 60, 1)
+    return degrees, minutes, seconds
 
-# Function to generate PDF from fetched records
+def format_coordinates(latitude, longitude):
+    latitude_suffix = 'J' if latitude < 0 else 'S'
+    longitude_suffix = 'Z' if longitude < 0 else 'V'
+    
+    abs_latitude = abs(latitude)
+    abs_longitude = abs(longitude)
+    
+    latitude_dms = decimal_to_dms(abs_latitude)
+    longitude_dms = decimal_to_dms(abs_longitude)
+    
+    formatted_latitude = f"{latitude_dms[0]}° {latitude_dms[1]}' {latitude_dms[2]}\" {latitude_suffix}"
+    formatted_longitude = f"{longitude_dms[0]}° {longitude_dms[1]}' {longitude_dms[2]}\" {longitude_suffix}"
+    
+    return formatted_latitude, formatted_longitude
+
+def format_timestamp(timestamp):
+    days_of_week = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota']
+    months = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince']
+    
+    day_of_week = days_of_week[timestamp.weekday()]
+    day_of_month = timestamp.day
+    month = months[timestamp.month - 1]
+    year = timestamp.year
+    hours = f"{timestamp.hour:02}"
+    minutes = f"{timestamp.minute:02}"
+    seconds = f"{timestamp.second:02}"
+    
+    formatted_date = f"{day_of_week} {day_of_month}. {month} {year} v {hours}:{minutes}:{seconds}"
+    
+    return formatted_date
+
 def generate_pdf(records, output_file):
     try:
-        # Create canvas for PDF
         c = canvas.Canvas(output_file, pagesize=letter)
         
-        # Set up PDF content
         c.setFont("Helvetica-Bold", 12)
         c.drawString(100, 750, "Records from Database")
         c.setFont("Helvetica", 10)
@@ -63,15 +89,19 @@ def generate_pdf(records, output_file):
 
         for record in records:
             id, timestamp, longitude, latitude, name, path = record
-            c.drawString(100, y, f"ID: {id}")
+            
+            formatted_latitude, formatted_longitude = format_coordinates(latitude, longitude)
+            formatted_timestamp = format_timestamp(timestamp)
+
+            c.drawString(100, y, f"{id}")
             y -= 20
-            c.drawString(100, y, f"Timestamp: {timestamp}")
+            c.drawString(100, y, f"{formatted_timestamp}")
             y -= 20            
-            c.drawString(100, y, f"Longitude: {longitude}")
+            c.drawString(100, y, f"{formatted_latitude}")
             y -= 20
-            c.drawString(100, y, f"Latitude: {latitude}")
+            c.drawString(100, y, f"{formatted_longitude}")
             y -= 20
-            c.drawString(100, y, f"Location Name: {name}")
+            c.drawString(100, y, f"Lokace: {name}")
             y -= 40
 
             if path and os.path.exists(path):
