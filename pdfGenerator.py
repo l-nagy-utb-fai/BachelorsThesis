@@ -14,6 +14,8 @@ db_config = {
     'port': '5432'  # Your database port
 }
 
+mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/Mapky'
+
 # Function to fetch records from database within a given ID range
 def fetch_records_in_range(min_id, max_id):
     try:
@@ -79,8 +81,21 @@ def generate_pdf(records, output_file):
                     y -= 120
                 except Exception as e:
                     print(f"Error adding image {path}: {e}")
+                    y -= 20
             else:
                 y -= 20
+
+            mapPath = os.path.join(mapsFolder, f"{id}.jpg")
+            if os.path.exists(mapPath):
+                try:
+                    map = ImageReader(mapPath)
+                    c.drawImage(map, 350, y - 100, width=200, height=100)
+                    y -= 120
+                except Exception as e:
+                    print(f"Error adding additional image {mapPath}: {e}")
+                    y -= 20
+            else:
+                y -= 20            
 
             y -= 40
 
