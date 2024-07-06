@@ -79,20 +79,35 @@
             <button type="submit">Nahrát novou lokaci</button>
         </form>
 
+        <form id="generatePDF">
+            <input type ="number" id="minId" name="min_id" placeholder="Min ID" required>
+            <input type ="number" id="maxId" name="max_id" placeholder="Max ID" required>
+            <button class="button" id="submit">Generate PDF</button>
+        </form>
         <div class="location-list" id="locationList"></div>
         <div class="status-list" id="statusList"></div>
-        <button class="button" id="runHelloWorldButton">Run Hello World Script</button>
-
     </div>
 
     <script>
-        document.getElementById('runHelloWorldButton').addEventListener('click', async () => {
-            console.log('Run Hello World button clicked');
+        document.getElementById('generatePDF').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            
+            const minId = document.getElementById('minId').value;
+            const maxId = document.getElementById('maxId').value;
+
             try {
-                const response = await fetch('/api/runHelloWorld');
+                const response = await fetch('/api/generate_pdf_range', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ min_id: minId, max_id: maxId })
+                });
+
                 if (!response.ok) {
                     throw new Error('Failed to run script');
                 }
+                
                 const result = await response.json();
                 console.log('Script response:', result.message);
                 alert(result.message); // Show the output in an alert (adjust as needed)

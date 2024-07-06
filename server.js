@@ -7,6 +7,7 @@ const exifParser = require('exif-parser'); //Metadata extraction
 const convertHeicToJpeg = require('./convert');
 const fetch = require('node-fetch'); //Je to k něčemu?
 const { spawn } = require('child_process');
+const bodyParser = require('body-parser');
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -451,11 +452,18 @@ app.get('/api/statuses', (req, res) => {
     res.json({statuses: possibleStatuses});
 });
 
-app.get('/api/runHelloWorld', (req, res) => {
-    console.log('Hello World script endpoint called');
+app.use(bodyParser.json());
 
+app.post('/api/generate_pdf_range', (req, res) => {
+    console.log('Generate PDF range endpoint called');
+    const { min_id, max_id } = req.body;
+
+    if (min_id === undefined || max_id === undefined) {
+        return res.status(400).json({ error: 'Missing min_id or max_id' });
+    }
+    
     try {
-        const pythonProcess = spawn('python', ['pdfGenerator.py']);
+        const pythonProcess = spawn('python', ['pdfGenerator.py', min_id, max_id]);
 
         pythonProcess.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);

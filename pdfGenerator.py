@@ -1,6 +1,7 @@
 import psycopg2
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import sys
 
 # Database connection parameters
 db_config = {
@@ -73,9 +74,13 @@ def generate_pdf(records, output_file):
 
 # Main function to execute the script
 def main():
-    min_id = 1  # Minimum ID in the range
-    max_id = 10  # Maximum ID in the range
-    output_file = "records_report.pdf"  # Output PDF file name
+    if len(sys.argv) != 3:
+        print("Usage python pdfGenerator.py <min_id> <max_id>")
+        sys.exit(1)
+
+    min_id = int(sys.argv[1])
+    max_id = int(sys.argv[2])
+    output_file = "records_report.pdf"
     
     # Fetch records from database
     records = fetch_records_in_range(min_id, max_id)
