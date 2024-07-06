@@ -1,7 +1,9 @@
 import psycopg2
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 import sys
+import os
 
 # Database connection parameters
 db_config = {
@@ -21,7 +23,7 @@ def fetch_records_in_range(min_id, max_id):
 
         # Query to fetch records within the ID range
         query = """
-            SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name
+            SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name, r.path
             FROM records r
             JOIN locations l ON r.location_id = l.id
             WHERE r.id BETWEEN %s AND %s
@@ -56,14 +58,39 @@ def generate_pdf(records, output_file):
         
         # Iterate through records and write to PDF
         y = 700
+
         for record in records:
-            id, timestamp, longitude, latitude, name = record
+            id, timestamp, longitude, latitude, name, path = record
             c.drawString(100, y, f"ID: {id}")
-            c.drawString(200, y, f"Timestamp: {timestamp}")
-            c.drawString(350, y, f"Longitude: {longitude}")
-            c.drawString(450, y, f"Latitude: {latitude}")
-            c.drawString(550, y, f"Location Name: {name}")
             y -= 20
+            c.drawString(100, y, f"Timestamp: {timestamp}")
+            y -= 20            
+            c.drawString(100, y, f"Longitude: {longitude}")
+            y -= 20
+            c.drawString(100, y, f"Latitude: {latitude}")
+            y -= 20
+            c.drawString(100, y, f"Location Name: {name}")
+            y -= 40
+
+            if path and os.path.exists(path):
+                try:
+                    img = ImageReader(path)
+                    c.drawImage(img, 100, y-100, width=200, height=100)
+                    y -= 120
+                except Exception as e:
+                    print(f"Error adding image {path}: {e}")
+            else:
+                y -= 20
+
+            y -= 40
+
+            if y < 100:
+                c.showPage()
+                c.setFont("Helvetica-Bold", 12)
+                c.drawString(100, 750, "Records from Database")
+                c.setFont("Helvetica", 10)
+                c.drawString(100, 730, "-" * 60)
+                y = 700
         
         # Save PDF
         c.save()
