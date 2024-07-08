@@ -20,7 +20,7 @@ def fetch_records_in_range(min_id, max_id):
         conn = psycopg2.connect(**db_config)
         cursor = conn.cursor()
         query = """
-            SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name, r.path
+            SELECT r.id, r.timestamp, r.longitude, r.latitude, l.name, r.pathminiature
             FROM records r
             JOIN locations l ON r.location_id = l.id
             WHERE r.id BETWEEN %s AND %s
@@ -75,67 +75,90 @@ def format_timestamp(timestamp):
     
     return formatted_date
 
+def draw_image_preserve_aspect(c, mapPath, x, y, width, height):
+    mapPic = ImageReader(mapPath)
+    map_width, map_height = mapPic.getSize()
+    aspect_ratio = map_width / map_height
+
+    # Calculate the dimensions of the image to preserve the aspect ratio
+    if width / height > aspect_ratio:
+        draw_height = height
+        draw_width = height * aspect_ratio
+    else:
+        draw_width = width
+        draw_height = width / aspect_ratio
+
+    # Calculate the position to center the image within the given width and height
+#    draw_x = x + (width - draw_width) / 2
+#    draw_y = y + (height - draw_height) / 2
+
+    c.drawImage(mapPic, x, y - draw_height, draw_width, draw_height)
+
 def generate_pdf(records, output_file):
     try:
         c = canvas.Canvas(output_file, pagesize=letter)
-        
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(100, 750, "Records from Database")
-        c.setFont("Helvetica", 10)
-        c.drawString(100, 730, "-" * 60)
-        
-        # Iterate through records and write to PDF
-        y = 700
 
-        for record in records:
-            id, timestamp, longitude, latitude, name, path = record
+        x_left = 50
+        x_right = 350
+        y_start = 750
+        row_height = 250
+        col_width = 250
+        image_width = 280
+        image_height = 140
+
+        for i, record in enumerate(records):
+            id, timestamp, longitude, latitude, name, pathminiature = record
             
-            formatted_latitude, formatted_longitude = format_coordinates(latitude, longitude)
-            formatted_timestamp = format_timestamp(timestamp)
+            col = i % 2
+            row = (i // 2) % 3
+            x = x_left if col == 0 else x_right
+            y = y_start - row * row_height
 
-            c.drawString(100, y, f"{id}")
-            y -= 20
-            c.drawString(100, y, f"{formatted_timestamp}")
-            y -= 20            
-            c.drawString(100, y, f"{formatted_latitude}")
-            y -= 20
-            c.drawString(100, y, f"{formatted_longitude}")
-            y -= 20
-            c.drawString(100, y, f"Lokace: {name}")
-            y -= 40
-
-            if path and os.path.exists(path):
-                try:
-                    img = ImageReader(path)
-                    c.drawImage(img, 100, y-100, width=200, height=100)
-                    y -= 120
-                except Exception as e:
-                    print(f"Error adding image {path}: {e}")
-                    y -= 20
-            else:
-                y -= 20
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(x, y, f"{id}.")
+            y -= 10
 
             mapPath = os.path.join(mapsFolder, f"{id}.jpg")
             if os.path.exists(mapPath):
                 try:
-                    map = ImageReader(mapPath)
-                    c.drawImage(map, 350, y - 100, width=200, height=100)
-                    y -= 120
+                    draw_image_preserve_aspect(c, mapPath, x, y, image_width, image_height)
+                    y -= image_height + 20
                 except Exception as e:
                     print(f"Error adding additional image {mapPath}: {e}")
                     y -= 20
             else:
-                y -= 20            
+                y -= 20 
 
-            y -= 40
+            formatted_latitude, formatted_longitude = format_coordinates(latitude, longitude)
+            formatted_timestamp = format_timestamp(timestamp)
 
-            if y < 100:
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(x, y, f"{formatted_timestamp}")
+            y -= 15       
+            c.setFont("Helvetica", 9)     
+            c.drawString(x, y, f"{formatted_latitude}")
+            y -= 15
+            c.drawString(x, y, f"{formatted_longitude}")
+            y -= 15
+            c.setFont("Helvetica-Bold", 9)
+            c.drawString(x, y, f"Lokace - {name}")
+            y -= 15
+
+#           if path and os.path.exists(path):
+#               try:
+#                   img = ImageReader(path)
+#                   c.drawImage(img, 100, y-100, width=200, height=100)
+#                   y -= 120
+#               except Exception as e:
+#                   print(f"Error adding image {path}: {e}")
+#                   y -= 20
+#           else:
+#               y -= 20           
+#            y -= 40
+
+            if (i + 1) % 6 == 0:
                 c.showPage()
-                c.setFont("Helvetica-Bold", 12)
-                c.drawString(100, 750, "Records from Database")
-                c.setFont("Helvetica", 10)
-                c.drawString(100, 730, "-" * 60)
-                y = 700
+                y_start = 750
         
         # Save PDF
         c.save()
