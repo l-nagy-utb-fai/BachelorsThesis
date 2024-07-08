@@ -75,7 +75,7 @@ def format_timestamp(timestamp):
     
     return formatted_date
 
-def draw_image_preserve_aspect(c, mapPath, x, y, width, height):
+def draw_image_preserve_aspect(c, mapPath, x, y, width, height, mini_path=None):
     mapPic = ImageReader(mapPath)
     map_width, map_height = mapPic.getSize()
     aspect_ratio = map_width / map_height
@@ -88,11 +88,27 @@ def draw_image_preserve_aspect(c, mapPath, x, y, width, height):
         draw_width = width
         draw_height = width / aspect_ratio
 
-    # Calculate the position to center the image within the given width and height
-#    draw_x = x + (width - draw_width) / 2
-#    draw_y = y + (height - draw_height) / 2
-
     c.drawImage(mapPic, x, y - draw_height, draw_width, draw_height)
+
+    if mini_path and os.path.exists(mini_path):
+        try:
+            miniPic = ImageReader(mini_path)
+            mini_width, mini_height = miniPic.getSize()
+            mini_aspect_ratio = mini_width / mini_height
+
+            mini_height_scaled = 0.4 * draw_height
+            if mini_width / mini_height > mini_aspect_ratio:
+                mini_draw_height = mini_height_scaled
+                mini_draw_width = mini_height_scaled * mini_aspect_ratio
+            else:
+                mini_draw_width = mini_height_scaled
+                mini_draw_height = mini_height_scaled / mini_aspect_ratio
+
+            mini_x = x
+            mini_y = y - mini_draw_height
+            c.drawImage(miniPic, mini_x, mini_y, mini_draw_width, mini_draw_height)
+        except Exception as e:
+            print(f"Error adding miniature image {mini_path}: {e}")
 
 def generate_pdf(records, output_file):
     try:
@@ -121,7 +137,7 @@ def generate_pdf(records, output_file):
             mapPath = os.path.join(mapsFolder, f"{id}.jpg")
             if os.path.exists(mapPath):
                 try:
-                    draw_image_preserve_aspect(c, mapPath, x, y, image_width, image_height)
+                    draw_image_preserve_aspect(c, mapPath, x, y, image_width, image_height, pathminiature)
                     y -= image_height + 20
                 except Exception as e:
                     print(f"Error adding additional image {mapPath}: {e}")
