@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retrieve Data</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Raleway', sans-serif;
+            font-size: 16px;
             margin: 0;
             padding: 20px;
             overflow-x: hidden; /* Prevent horizontal scrolling */
@@ -98,6 +100,15 @@
             max-height: 200px;
             object-fit: contain;
         }
+        .database-button {
+            font-family: 'Raleway', sans-serif;
+            margin-right: 16px;
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color: #aacc00;
+            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }  
 
         /* Fixed height for the photo container */
         #photo {
