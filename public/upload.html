@@ -7,25 +7,50 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px; /* Add padding to body for spacing */
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+        }
+        .status-list, .upload-section, .location-list {
+            padding: 20px;
+            border: 1px solid black;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            overflow: hidden;
+        }
+        .status-list.expanded, .location-list.expanded{
+            height: auto !important;
+        }
+        .status-list.collapsed, .location-list.collapsed{
+            height: 20px;
+            overflow: hidden;
         }
         .upload-section {
-            border: 1px solid black; /* Add border to the section */
-            padding: 20px; /* Add padding inside the section */
-            border-radius: 8px; /* Add border radius to round corners */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            max-width: 600px; /* Limit width of the form */
-            margin: 0 auto; /* Center the form */
+            grid-column: 2 / 3;
+            display: grid;
+            gap: 20px;
+            grid-template-rows: auto auto auto;
         }
+        .upload-box {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
         form {
             display: flex;
             flex-direction: column;
+            gap: 10px;
         }
         input[type="file"],
         input[type="text"],
+        input[type="number"],
         button[type="submit"],
         select {
-            margin-bottom: 10px; /* Add spacing between elements */
             padding: 10px; /* Add padding to input */
             border: 1px solid #ccc; /* Add border to input */
             border-radius: 4px; /* Add border radius to input */
@@ -37,87 +62,99 @@
             border: none; /* Remove border */
             cursor: pointer; /* Change cursor to pointer on hover */
             outline: none; /* Remove outline */
+            padding: 10px;
         }
         button[type="submit"]:hover {
             background-color: greenyellow; /* Darker background color on hover */
         }
-        .location-list {
-            margin-top: 20px; /* Add margin above the location list */
-            padding: 10px; /* Add padding inside the list container */
-            border: 1px solid #ccc; /* Add border to the list container */
-            border-radius: 4px; /* Add border radius to round corners */
-        }
-        .location-item {
+/*        .location-list {
+            margin-top: 20px; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        } */
+        .location-item,
+        
+        /*{
             display: inline-block;
-            margin-right: 20px; /* Add spacing between location items */
-        }
+            margin-right: 20px;
+        } 
         .status-list {
             margin-bottom: 20px;
-        }
+        } */
         .status-item {
-            margin-right: 10px;
             display: inline-block;
+            margin-bottom: 10px;
             padding: 5px 10px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+        .section-heading{
+            cursor: pointer; /* Add cursor pointer to indicate expandability */
+            margin: 0; /* Remove default margin */
+            padding: 10px; /* Add padding for clickable area */
+            background-color: #ddd; /* Light background color */
+            border-bottom: 1px solid #ccc; /* Add bottom border */
+        }
+        .section-heading:hover {
+            background-color: #ccc; /* Darken background on hover */
+        }
     </style>
 </head>
 <body>
+    <div class="status-list collapsed" id="statusList">
+        <h2 class="section-heading">Status list</h2>
+    </div>
+
     <div class="upload-section">
-        <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="heicFile" name="heicFiles" multiple accept=".heic">
-            <input type="submit" value="Upload">
-        </form>
-
-        <form id="uploadLocationForm">
-            <input type="text" id="locationName" name="locationName" placeholder="Název nové lokace" required>
-            <input type="text" id="locationComment" name="locationComment" placeholder="Přidat komentář k lokaci">
-            <label for="anonymized">Anonymizovat lokaci:</label>
-            <input type="checkbox" id="anonymized" name="anonymized" value="true">
-            <button type="submit">Nahrát novou lokaci</button>
-        </form>
-
-        <form id="generatePDF">
-            <input type ="number" id="minId" name="min_id" placeholder="Min ID" required>
-            <input type ="number" id="maxId" name="max_id" placeholder="Max ID" required>
-            <button class="button" id="submit">Generate PDF</button>
-        </form>
-        <div class="location-list" id="locationList"></div>
-        <div class="status-list" id="statusList"></div>
+        <div class="upload-box" id="uploadFormContainer">
+            <h2>Upload files</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="heicFile" name="heicFiles" multiple accept=".heic">
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+        <div class="upload-box" id="uploadLocationFormContainer">
+            <h2>Upload Location</h2>
+            <form id="uploadLocationForm">
+                <input type="text" id="locationName" name="locationName" placeholder="Název nové lokace" required>
+                <input type="text" id="locationComment" name="locationComment" placeholder="Přidat komentář k lokaci">
+                <label for="anonymized">Anonymizovat lokaci:</label>
+                <input type="checkbox" id="anonymized" name="anonymized" value="true">
+                <button type="submit">Nahrát novou lokaci</button>
+            </form>
+        </div>
+        <div class="upload-box" id="generatePDFContainer">
+            <h2>Generate PDF</h2>
+            <form id="generatePDF">
+                <input type ="number" id="minId" name="min_id" placeholder="Min ID" required>
+                <input type ="number" id="maxId" name="max_id" placeholder="Max ID" required>
+                <button class="button" id="submit">Generate PDF</button>
+            </form>
+        </div>
+    </div>
+        
+    <div class="location-list collapsed" id="locationList">
+        <h2 class="section-heading">Location List</h2>
     </div>
 
     <script>
-        document.getElementById('generatePDF').addEventListener('submit', async function (event) {
-            event.preventDefault();
-            
-            const minId = document.getElementById('minId').value;
-            const maxId = document.getElementById('maxId').value;
+        function toggleStatusList() {
+            const statusList = document.getElementById('statusList');
+            statusList.classList.toggle('expanded');
+            statusList.classList.toggle('collapsed');
+            fetchAndDisplayStatuses();
+        }
 
-            try {
-                const response = await fetch('/api/generate_pdf_range', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ min_id: minId, max_id: maxId })
-                });
+        function toggleLocationList() {
+            const locationList = document.getElementById('locationList');
+            locationList.classList.toggle('expanded');
+            locationList.classList.toggle('collapsed');
+            fetchAndDisplayLocations(); // Fetch locations on expand
+        }
 
-                if (!response.ok) {
-                    throw new Error('Failed to run script');
-                }
-                
-                const result = await response.json();
-                console.log('Script response:', result.message);
-                alert(result.message); // Show the output in an alert (adjust as needed)
-            } catch (error) {
-                console.error('Error running script:', error);
-                alert('Failed to run script.');
-            }
-        });
-
-async function fetchAndDisplayStatuses() {
+        async function fetchAndDisplayStatuses() {
             try {
                 const response = await fetch('/api/statuses'); // Fetch statuses from backend
                 if (!response.ok) {
@@ -142,10 +179,6 @@ async function fetchAndDisplayStatuses() {
             }
         }
 
-        // Fetch and display statuses on page load
-        document.addEventListener('DOMContentLoaded', fetchAndDisplayStatuses);
-        
-        // Function to fetch and display locations
         async function fetchAndDisplayLocations() {
             try {
                 const response = await fetch('/api/locations'); // Replace with your endpoint
@@ -177,6 +210,45 @@ async function fetchAndDisplayStatuses() {
             }
         }
 
+        document.getElementById('statusList').addEventListener('click', toggleStatusList);
+        document.getElementById('locationList').addEventListener('click', toggleLocationList);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndDisplayStatuses();
+            fetchAndDisplayLocations();
+        });
+
+        document.getElementById('generatePDF').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            
+            const minId = document.getElementById('minId').value;
+            const maxId = document.getElementById('maxId').value;
+
+            try {
+                const response = await fetch('/api/generate_pdf_range', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ min_id: minId, max_id: maxId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to run script');
+                }
+                
+                const result = await response.json();
+                console.log('Script response:', result.message);
+                alert(result.message); // Show the output in an alert (adjust as needed)
+            } catch (error) {
+                console.error('Error running script:', error);
+                alert('Failed to run script.');
+            }
+        });
+
+        // Fetch and display statuses on page load
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayStatuses);
+        
         // Fetch and display locations on page load
         document.addEventListener('DOMContentLoaded', fetchAndDisplayLocations);
 
