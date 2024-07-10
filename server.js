@@ -40,13 +40,19 @@ const upload = multer({ storage: storage }); //Initialization
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+app.get('/zaznamy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'records.html'));
 });
 app.get('/upload', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'upload.html'));
 });
-app.get('/database', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'database.html'));
+app.get('/seznam', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'list.html'));
+});
+app.get('/statistiky', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'statistics.html'));
 });
 
 
