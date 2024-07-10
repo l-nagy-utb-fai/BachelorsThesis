@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload HEIC Photo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -100,6 +101,16 @@
         .section-heading:hover {
             background-color: #ccc; /* Darken background on hover */
         }
+        #mapContainer{
+            position: relative;
+            width: 86vh;
+            height: 55vh;
+            margin: 0 auto;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }    
     </style>
 </head>
 <body>
@@ -133,13 +144,71 @@
                 <button class="button" id="submit">Generate PDF</button>
             </form>
         </div>
+        <div class="upload-box" id="mapHelperContainer">
+            <h2>Map helper</h2>
+            <form id="mapForm">
+                <input type="number" id="recordId" name="recordId" placeholder="Record ID" required>
+                <button type="submit">Vyhledat</button>
+                <div id="mapContainer">
+                    <div id="map"></div>
+                </div>
+            </form>
+        </div>
     </div>
         
     <div class="location-list collapsed" id="locationList">
         <h2 class="section-heading">Location List</h2>
     </div>
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+
+        let map = null; // Variable to hold the map instance
+        const initializeMap = (latitude, longitude) => {
+            if (map) {
+                map.remove(); // Remove existing map instance if it exists
+            }
+            map = L.map('mapContainer').setView([latitude, longitude], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Nalezen zde')
+                .openPopup();
+        };
+
+        // Function to retrieve data from the database
+        const retrieveCoordinates = (recordId) => {
+            fetch(`/coordinates?id=${recordId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to retrieve coordinates');
+                    } return response.json();
+                })
+                .then(data => {
+                    const mapDiv = document.getElementById('mapContainer');
+                    mapDiv.innerText = '';
+                    initializeMap(data.latitude, data.longitude);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to retrieve data from the database.');
+                });
+        };
+
+        document.getElementById('mapForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const recordId = document.getElementById('recordId').value.trim();
+            if (!recordId) {
+                alert('Please enter a record ID');
+                return;
+            }
+            retrieveCoordinates(recordId);
+        });
+
         function toggleStatusList() {
             const statusList = document.getElementById('statusList');
             statusList.classList.toggle('expanded');

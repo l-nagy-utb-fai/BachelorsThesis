@@ -496,3 +496,38 @@ app.post('/api/generate_pdf_range', (req, res) => {
         res.status(500).json({ message: 'Failed to execute script' });
     }
 });
+
+// Retrieving coordinates by ID
+app.get('/coordinates', async (req, res) => {
+    const recordId = req.query.id; // Getting ID from query
+    const client = new Client(dbConfig); // Connecting to the database
+    await client.connect();
+
+    try {
+        const query = `
+            SELECT 
+                id, 
+                latitude,
+                longitude
+            FROM records
+            WHERE id = $1
+        `;
+
+        const result = await client.query(query, [recordId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+        }
+
+        const record = result.rows[0];
+        res.json({
+            id: record.id,
+            latitude: record.latitude,
+            longitude: record.longitude
+        });
+    } catch (error) {
+        console.error('Error retrieving coordinates from database:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        await client.end(); // Closing the database connection
+    }
+});
