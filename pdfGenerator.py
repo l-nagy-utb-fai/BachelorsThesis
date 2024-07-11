@@ -1,3 +1,5 @@
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 import psycopg2
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -14,6 +16,12 @@ db_config = {
     'port': '5432'
 }
 mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/Mapky'
+
+fontRegular = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Regular.ttf"
+fontBold = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Bold.ttf"
+
+pdfmetrics.registerFont(TTFont('Arial', fontRegular))
+pdfmetrics.registerFont(TTFont('Arial-Bold', fontBold))
 
 def fetch_records_in_range(min_id, max_id):
     try:
@@ -96,16 +104,12 @@ def draw_image_preserve_aspect(c, mapPath, x, y, width, height, mini_path=None):
             mini_width, mini_height = miniPic.getSize()
             mini_aspect_ratio = mini_width / mini_height
 
-            mini_height_scaled = 0.4 * draw_height
-            if mini_width / mini_height > mini_aspect_ratio:
-                mini_draw_height = mini_height_scaled
-                mini_draw_width = mini_height_scaled * mini_aspect_ratio
-            else:
-                mini_draw_width = mini_height_scaled
-                mini_draw_height = mini_height_scaled / mini_aspect_ratio
+            mini_draw_width = 0.23 * draw_width
+            mini_draw_height = 0.36 * draw_height
 
             mini_x = x
             mini_y = y - mini_draw_height
+
             c.drawImage(miniPic, mini_x, mini_y, mini_draw_width, mini_draw_height)
         except Exception as e:
             print(f"Error adding miniature image {mini_path}: {e}")
@@ -130,7 +134,7 @@ def generate_pdf(records, output_file):
             x = x_left if col == 0 else x_right
             y = y_start - row * row_height
 
-            c.setFont("Helvetica-Bold", 14)
+            c.setFont("Arial-Bold", 14)
             c.drawString(x, y, f"{id}.")
             y -= 10
 
@@ -148,15 +152,15 @@ def generate_pdf(records, output_file):
             formatted_latitude, formatted_longitude = format_coordinates(latitude, longitude)
             formatted_timestamp = format_timestamp(timestamp)
 
-            c.setFont("Helvetica-Bold", 9)
+            c.setFont("Arial-Bold", 9)
             c.drawString(x, y, f"{formatted_timestamp}")
             y -= 15       
-            c.setFont("Helvetica", 9)     
+            c.setFont("Arial", 9)     
             c.drawString(x, y, f"{formatted_latitude}")
             y -= 15
             c.drawString(x, y, f"{formatted_longitude}")
             y -= 15
-            c.setFont("Helvetica-Bold", 9)
+            c.setFont("Arial-Bold", 9)
             c.drawString(x, y, f"Lokace - {name}")
             y -= 15
 
