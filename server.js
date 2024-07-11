@@ -531,3 +531,17 @@ app.get('/coordinates', async (req, res) => {
         await client.end(); // Closing the database connection
     }
 });
+
+app.post('/save-screenshot', (req, res) => {
+    const { image, recordId } = req.body;
+    const base64Data = image.replace(/^data:image\/png;base64,/, '');
+    const filePath = path.join(__dirname, 'mapy', `${recordId}.png`);
+
+    fs.writeFile(filePath, base64Data, 'base64', (err) => {
+        if (err) {
+            console.error('Error saving screenshot:', err);
+            return res.status(500).json({ message: 'Failed to save screenshot.' });
+        }
+        res.json({ message: 'Screenshot saved successfully.' });
+    });
+});

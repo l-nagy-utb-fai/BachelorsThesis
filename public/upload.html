@@ -152,6 +152,7 @@
                 <div id="mapContainer">
                     <div id="map"></div>
                 </div>
+                <button id="screenshotButton">Take Screenshot</button>
             </form>
         </div>
     </div>
@@ -161,7 +162,38 @@
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
     <script>
+
+        document.getElementById('screenshotButton').addEventListener('click', function() {
+            const mapContainer = document.getElementById('mapContainer');
+            const recordId = this.dataset.recordId;            
+            
+            leafletImage(map, function(err, canvas) {
+                if (err) {
+                    console.error('Error generating map image:', err);
+                    alert('Failed to generate map image.');
+                    return;
+                }
+                const dataURL = canvas.toDataURL('image/png');
+                fetch('/save-screenshot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: dataURL, recordId: recordId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Screenshot saved:', data.message);
+                    alert('Screenshot saved successfully.');
+                })
+                .catch(error => {
+                    console.error('Error saving screenshot:', error);
+                    alert('Failed to save screenshot.');
+                });
+            });
+        });
 
         let map = null; // Variable to hold the map instance
         const initializeMap = (latitude, longitude) => {
@@ -191,6 +223,7 @@
                     const mapDiv = document.getElementById('mapContainer');
                     mapDiv.innerText = '';
                     initializeMap(data.latitude, data.longitude);
+                    document.getElementById('screenshotButton').dataset.recordId = recordId;
                 })
                 .catch(error => {
                     console.error('Error:', error);

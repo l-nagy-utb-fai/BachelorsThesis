@@ -15,7 +15,7 @@ db_config = {
     'password': 'testovanikryptologie',
     'port': '5432'
 }
-mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/Mapky'
+mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/mapy'
 
 fontRegular = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Regular.ttf"
 fontBold = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Bold.ttf"
@@ -138,7 +138,7 @@ def generate_pdf(records, output_file):
             c.drawString(x, y, f"{id}.")
             y -= 10
 
-            mapPath = os.path.join(mapsFolder, f"{id}.jpg")
+            mapPath = os.path.join(mapsFolder, f"{id}.png")
             if os.path.exists(mapPath):
                 try:
                     draw_image_preserve_aspect(c, mapPath, x, y, image_width, image_height, pathminiature)
