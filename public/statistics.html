@@ -11,10 +11,79 @@
             font-size: 14px;
             font-family: 'Raleway', sans-serif;
         }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #2b9348;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2b9348;
+            color: #fff;
+        }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Top 5 Most Used Locations</h1>
+        <table id="locationsTable">
+            <thead>
+                <tr>
+                    <th>Location Name</th>
+                    <th>Usage Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here -->
+            </tbody>
+        </table>
+        <div id="errorMessage" class="error"></div>
+    </div>  
     <script>
+                async function fetchTopLocations() {
+            try {
+                const response = await fetch('/api/top-locations');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+
+                const tableBody = document.querySelector('#locationsTable tbody');
+                tableBody.innerHTML = '';
+
+                data.forEach(location => {
+                    const row = document.createElement('tr');
+                    const nameCell = document.createElement('td');
+                    const countCell = document.createElement('td');
+
+                    nameCell.textContent = location.name;
+                    countCell.textContent = location.usage_count;
+
+                    row.appendChild(nameCell);
+                    row.appendChild(countCell);
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                document.querySelector('#errorMessage').textContent = 'Failed to load locations: ' + error.message;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchTopLocations);
     </script>
 </body>
 </html>

@@ -545,3 +545,30 @@ app.post('/save-screenshot', (req, res) => {
         res.json({ message: 'Screenshot saved successfully.' });
     });
 });
+
+// New route to fetch top 5 most used locations
+app.get('/api/top-locations', async (req, res) => {
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        // Query to get the top 5 most used locations
+        const query = `
+            SELECT locations.name, COUNT(records.location_id) AS usage_count
+            FROM locations
+            LEFT JOIN records ON locations.id = records.location_id
+            GROUP BY locations.name
+            ORDER BY usage_count DESC
+            LIMIT 5
+        `;
+        const result = await client.query(query);
+
+        // Send the result as JSON
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching top locations from database:', error);
+        res.status(500).send({ message: 'An error occurred while fetching locations' });
+    } finally {
+        await client.end();
+    }
+});
