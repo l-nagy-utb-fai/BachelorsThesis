@@ -52,25 +52,43 @@
             right: 20px;
             width: 50px; /* Initial width */
             height: 50px; /* Initial height */
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: #4BA136;
             border-radius: 10px;
             overflow: hidden;
             cursor: pointer;
             transition: width 0.3s ease, height 0.3s ease;
             z-index: 1; /* Ensure menu is above other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;  
+            border: 2px solid black;
         }
 
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            fill: black;
+        }
+
+        .menu-open .menu-icon {
+            display: none;
+        }        
+
         .menu-open {
-            width: 200px; /* Expanded width */
-            height: 200px; /* Expanded height */
+            width: 150px; /* Expanded width */
+            height: 150px; /* Expanded height */
         }
 
         .menu-items {
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100%;
+        }
+
+        .menu-open .menu-items {
+            display: flex;
         }
 
         .menu-item {
@@ -89,6 +107,7 @@
 </head>
 <body>
     <div class="menu-container" onclick="toggleMenu()">
+        <img src="menu_icon.svg" alt="Menu Icon" class="menu-icon">
         <div class="menu-items">
             <a href="/zaznamy" class="menu-item">Záznamy</a>
             <a href="/seznam" class="menu-item">Seznam</a>
