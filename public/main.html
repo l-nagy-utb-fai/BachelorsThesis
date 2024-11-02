@@ -11,7 +11,7 @@
             font-size: 16px;
             margin: 0;
             padding: 20px;
-            overflow-x: hidden; /* Prevent horizontal scrolling */
+            overflow: hidden; /* Prevent horizontal scrolling */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -44,6 +44,17 @@
             font-size: 1.6rem;
             font-weight: bold;
             color: black;
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            position: absolute; /* Absolutely position the logo */
+            left: 50%; /* Center the logo */
+            transform: translateX(-50%); /* Centering adjustment */
+            top: calc(65% + 10px);
+            max-width: 15%; /* Responsive logo */
+            height: auto; /* Maintain aspect ratio */
         }
 
         .menu-container {
@@ -118,6 +129,7 @@
     <div class="center-text">
         <p>Vítejte na stránkách 4-LEAVES, které představují sbírku čtyřlístků doktora Petra Žáčka.</p>
         <p class="second-sentence">Autorem stránek je Ladislav Nagy.</p>
+        <img src="logo.png" alt="Logo" class="logo">
     </div>
     <script>
         function toggleMenu() {

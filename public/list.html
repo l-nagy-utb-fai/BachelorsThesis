@@ -10,6 +10,10 @@
             background: linear-gradient(to bottom right, #2b9348, #aacc00);
             font-size: 14px;
             font-family: 'Raleway', sans-serif;
+            overflow: hidden; /* Prevent body scrolling */
+            height: 100vh; /* Full viewport height */
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack children vertically */
         }
         .header-container {
             display: flex;
@@ -17,20 +21,29 @@
             align-items: center;
             padding: 8px;
         }
+        .table-container {
+            flex-grow: 1; /* Allow this container to fill available space */
+            overflow-y: auto; /* Enable vertical scrolling */
+            margin: 0 10px; /* Add some margin to the sides of the table */
+            margin-bottom: 20px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             background: linear-gradient(to right, #eeef20, #bfd200);
+            table-layout: fixed; /* Fix the table layout to prevent resizing */
         }
         th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: left;
-            border-radius: 10px;
         }
         th {
             background: linear-gradient(to top, #eeef20, #bfd200);
-        }        
+            position: sticky; /* Make the header sticky */
+            top: 0; /* Position it at the top of the table container */
+            z-index: 10; /* Ensure it appears above other content */
+        }
         .thumbnail {
             max-width: 50px;
             max-height: 50px;
@@ -59,6 +72,7 @@
         <h1>Seznam záznamů</h1>
         <button class="mainPage-button" onclick="window.location.href='/'">Zpět</button>
     </div>
+    <div class="table-container">
     <table id="recordsTable">
         <thead>
             <tr>
@@ -77,6 +91,7 @@
             <!-- Table rows will be dynamically added here -->
         </tbody>
     </table>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
