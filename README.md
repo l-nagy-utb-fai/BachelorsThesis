@@ -20,6 +20,14 @@ git commit -m "Zpráva"
 
 git push origin main
 
+**Discarding changes:**
+
+ git reset --hard origin/main
+
+ git clean -fd
+
+ git status
+
 **Práce s databází:**
 
 psql -U postgres -d database
