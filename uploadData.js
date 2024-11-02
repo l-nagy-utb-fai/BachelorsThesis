@@ -188,5 +188,99 @@ async function uploadLocation (req, res, dbConfig) {
     }
 }
 
+// Function to format timestamp as desired for frontend display
+const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp); // Parse the ISO 8601 timestamp string
+    const daysOfWeek = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
+    const months = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    const dayOfMonth = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let seconds = date.getSeconds();
+
+    if (seconds < 10) seconds = '0' + seconds; // Add leading zero if minutes are less than 10
+    // Format hours and minutes to match the specified format
+    if (minutes < 10) minutes = '0' + minutes; // Add leading zero if minutes are less than 10
+    // Adjust hours to be in 24-hour format
+    if (hours < 10) hours = '0' + hours; // Add leading zero if hours are less than 10
+
+    // Construct the formatted date string
+    const formattedDate = `${dayOfWeek} ${dayOfMonth}. ${month} ${year} v ${hours}:${minutes}:${seconds}`;
+
+    return formattedDate;
+};
+
+// Function to convert decimal degrees to degrees, minutes, and seconds
+const decimalToDMS = (decimal) => {
+    const degrees = Math.floor(decimal);
+    const minutesDecimal = (decimal - degrees) * 60;
+    const minutes = Math.floor(minutesDecimal);
+    const seconds = ((minutesDecimal - minutes) * 60).toFixed(1);
+
+    return { degrees, minutes, seconds };
+};
+
+// Function to format coordinates based on provided rules
+const formatCoordinates = (latitude, longitude) => {
+    let latitudeSuffix = latitude < 0 ? 'J' : 'S';
+    let longitudeSuffix = longitude < 0 ? 'Z' : 'V';
+
+    // Convert latitude and longitude to absolute values for formatting
+    const absLatitude = Math.abs(latitude);
+    const absLongitude = Math.abs(longitude);
+
+    // Convert decimal coordinates to DMS format
+    const latitudeDMS = decimalToDMS(absLatitude);
+    const longitudeDMS = decimalToDMS(absLongitude);
+
+    // Format latitude and longitude as DMS
+    const formattedLatitude = `${latitudeDMS.degrees}° ${latitudeDMS.minutes}' ${latitudeDMS.seconds}" ${latitudeSuffix}`;
+    const formattedLongitude = `${longitudeDMS.degrees}° ${longitudeDMS.minutes}' ${longitudeDMS.seconds}" ${longitudeSuffix}`;
+
+    return {
+        formattedLatitude,
+        formattedLongitude
+    };
+};
+
+// Function to translate status
+const translateStatus = (status) => {
+    switch (status) {
+        case 'V':
+            return 'V pořádku';
+        case 'D':
+            return 'Darován';
+        case 'Z':
+            return 'Ztracen';
+        case 'N':
+            return 'Nevyfocen';
+        case 'L':
+            return 'Bez zadané lokace';
+        case 'G':
+            return 'Byl mi darován';
+        case 'S':
+            return 'Status není určitelný';
+        case 'J':
+            return 'S jinou fotografií';
+        default:
+            return 'Status neznámý';
+    }
+};
+
+const possibleStatuses = [
+    'V - V pořádku', 
+    'D - Darován', 
+    'Z - Ztracen', 
+    'N - Nevyfocen', 
+    'L - Bez zadané lokace', 
+    'G - Byl mi darován', 
+    'S - Status není určitelný', 
+    'J - S jinou fotografií'
+];
+
 // Exporting the upload middleware
-module.exports = { upload, uploadDir, uploadHEIC, uploadLocation, parseFileName };
+module.exports = { upload, uploadDir, uploadHEIC, uploadLocation, parseFileName, formatTimestamp, decimalToDMS, formatCoordinates, translateStatus, possibleStatuses };

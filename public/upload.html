@@ -364,7 +364,7 @@
             }
 
             try{
-                const response = fetch('/api/upload', {
+                const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData
                 });
@@ -375,9 +375,11 @@
 
                 const result = await response.json();
                 console.log('Upload successful:', result.message);
+                alert('Files uploaded successfully')
 
             } catch (error) {
                 console.error('Error uploading files:', error);
+                alert('Error uploading files.')
             }
         });
 
