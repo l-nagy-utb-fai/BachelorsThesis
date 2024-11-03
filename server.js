@@ -8,6 +8,7 @@ const { upload, uploadDir, uploadHEIC, uploadLocation, formatTimestamp, formatCo
 const top5Locations = require('./queries');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -290,11 +291,12 @@ app.post('/save-screenshot', (req, res) => {
 //Calling queries functions
 top5Locations(app, dbConfig);
 
-const SECRET_KEY = 'key';
+const SECRET_KEY = process.env.SECRET_KEY;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true}));
-
-const ADMIN_PASSWORD = 'pass';
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
