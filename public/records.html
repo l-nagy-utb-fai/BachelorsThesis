@@ -165,9 +165,12 @@
         </div>
         <div class="content">
             <div class="left">
-                <div class="column" id="photo">
-                    <div id="photoText" style="display: block;">Fotografie</div>
-                    <img id="photoImage" src="" alt="" onerror="console.error('Error loading image:', this.src)">
+                <div class="column" id="photo" style="position: relative; display: flex; justify-content: center; align-items: center;">                    
+                    <div id="overlay" style="position: absolute; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                        <img src="photo_icon.svg" alt="Icon" style="width: 200px; height: auto; opacity: 0.2; display: block;">
+                        <div id="photoText" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); color: black; display: block; font-weight: bold; opacity: 0.35; font-size: 14.5px;">Fotografie</div> 
+                    </div>
+                    <img id="photoImage" src="" alt="" onerror="console.error('Error loading image:', this.src)" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
                 </div>
                 <div class="column" id="status">Status</div>
             </div>
@@ -182,7 +185,12 @@
             </div>
 
             <div class="right">
-                <div class="column" id="map">Mapa</div>
+                <div class="column" id="map" style="position: relative; display: flex; justify-content: center; align-items: center;">
+                    <div id="overlay" style="position: absolute; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                        <img src="map_icon.svg" alt="Icon" style="width: 200px; height: auto; opacity: 0.2; display: block;">
+                        <div id="photoText" style="position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); color: black; display: block; font-weight: bold; opacity: 0.35; font-size: 14.2px;">Mapa</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -225,6 +233,7 @@
                             // Handle image load and error events
                             photoImage.onload = () => {
                                 document.getElementById('photoText').style.display = 'none'; // Hide the "Fotografie:" text on successful load
+                                document.querySelector('#photo img[src="photo_icon.svg"]').style.display = 'none'; // Hide the SVG icon
                             };
                             photoImage.onerror = () => {
                                 document.getElementById('photoText').style.display = 'block'; // Show the "Fotografie:" text on error
