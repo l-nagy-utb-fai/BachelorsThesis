@@ -164,6 +164,26 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
     <script>
+        async function fetchUploadPage() {
+            const token = localStorage.getItem('token');
+
+            const response = await fetch('http://localhost:3000/upload', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const content = await response.text();
+                document.getElementById('content').innerHTML = content;
+            } else {
+                alert('Access denied. Please log in.');
+                window.location.href = 'login.html'; // Redirect to login page
+            }
+        }
+
+        fetchUploadPage();
 
         document.getElementById('screenshotButton').addEventListener('click', function() {
             const mapContainer = document.getElementById('mapContainer');

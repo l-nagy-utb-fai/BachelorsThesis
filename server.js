@@ -6,6 +6,8 @@ const { spawn } = require('child_process');
 const bodyParser = require('body-parser');
 const { upload, uploadDir, uploadHEIC, uploadLocation, formatTimestamp, formatCoordinates, translateStatus, possibleStatuses } = require('./uploadData');
 const top5Locations = require('./queries');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -27,9 +29,6 @@ app.get('/', (req, res) => {
 });
 app.get('/zaznamy', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'records.html'));
-});
-app.get('/upload', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'upload.html'));
 });
 app.get('/seznam', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'list.html'));
@@ -290,6 +289,43 @@ app.post('/save-screenshot', (req, res) => {
 
 //Calling queries functions
 top5Locations(app, dbConfig);
+
+const SECRET_KEY = 'key';
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true}));
+
+const ADMIN_PASSWORD = 'pass';
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        const token = jwt.sign({}, SECRET_KEY, { expiresIn: '1h' });
+        res.json({ token });
+    } else {
+        res.status(401).send('Invalid credentials');
+    }
+});
+
+// Middleware to authenticate the token
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization'] && req.headers['authorization'].split(' ')[1];
+
+    if (!token) return res.sendStatus(401); // Unauthorized
+
+    jwt.verify(token, SECRET_KEY, (err) => {
+        if (err) return res.sendStatus(403); // Forbidden
+        next();
+    });
+};
+
+// Protected route
+app.get('/upload', authenticateToken, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'upload.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
