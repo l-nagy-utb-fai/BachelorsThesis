@@ -26,6 +26,7 @@
             overflow-y: auto; /* Enable vertical scrolling */
             margin: 0 10px; /* Add some margin to the sides of the table */
             margin-bottom: 20px;
+            position: relative;
         }
         table {
             width: 100%;
@@ -43,6 +44,19 @@
             position: sticky; /* Make the header sticky */
             top: 0; /* Position it at the top of the table container */
             z-index: 10; /* Ensure it appears above other content */
+            outline: 1px solid black;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        thead {
+        position: sticky;
+        top: 0; /* Ensures header is at the top of the table container */
+        background: linear-gradient(to top, #eeef20, #bfd200);
+        z-index: 10; /* Ensure it’s above table body rows */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        /* Add a visible top border to the header */
+        thead tr {
+            border-top: 2px solid black; /* Persistent top border for the header row */
         }
         .thumbnail {
             max-width: 50px;
