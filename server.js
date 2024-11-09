@@ -122,6 +122,7 @@ app.get('/record', async (req, res) => {
             address: record.address,
             locationName: record.location_name,
             comment: record.location_comment,
+            isAnonymized: record.location_comment === 'Komentář anonymizován',
             statusTransformed: translatedStatus,
             pathminiature: record.pathminiature,
             path: record.path

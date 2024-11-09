@@ -181,7 +181,12 @@
                 <div class="column" id="coordinates">Souřadnice</div>
                 <div class="column" id="address">Nejbližší adresa</div>
                 <div class="column" id="locationName">Název lokace</div>
-                <div class="column" id="comments">Komentář</div>
+                <div class="column" id="comments" style="position: relative; display: flex; justify-content: center; align-items: center;">
+                    <div id="overlay" style="position: absolute; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                        <img src="comment_icon.svg" alt="Comment Icon" style="width: 180px; height: auto; opacity: 0.20; display: block; ">
+                        <div id="photoText" style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); color: black; display: block; font-weight: bold; opacity: 0.3; font-size: 12px;">Komentář</div>
+                    </div>
+                </div>            
             </div>
 
             <div class="right">
@@ -256,7 +261,20 @@
                         document.getElementById('coordinates').innerText = `Zeměpisná šířka: ${record.latitudeFormatted}\n Zěměpisná délka: ${record.longitudeFormatted}`;
                         document.getElementById('address').innerText = '' + (record.address || '');
                         document.getElementById('locationName').innerText = '' + (record.locationName || '');
-                        document.getElementById('comments').innerText = '' + (record.comment || '');
+                        // Check if the comment is anonymized
+                        const commentsDiv = document.getElementById('comments');
+                        if (record.comment === 'Komentář anonymizován') {
+                            // Display icon and anonymized text
+                            commentsDiv.innerHTML = `
+                                <div style="display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                    <img src="secret_icon.svg" alt="Anonymized Icon" style="width: 80px; height: auto; opacity: 0.3;">
+                                    <span style="font-size: 14px; opacity: 0.5; color: #000;">Komentář anonymizován</span>
+                                </div>
+                            `;
+                        } else {
+                            // Display the actual comment text
+                            commentsDiv.innerText = record.comment || '';
+                        }
                         document.getElementById('status').innerText = record.statusTransformed;
 
                         // Check if coordinates are anonymized
