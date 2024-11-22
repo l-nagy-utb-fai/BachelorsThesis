@@ -7,15 +7,23 @@ const top5Locations = (app, dbConfig) => {
         await client.connect();
 
         try {
+            // First, get the total count of records
+            const totalRecordsQuery = 'SELECT COUNT(*) AS total FROM records';
+            const totalRecordsResult = await client.query(totalRecordsQuery);
+            const totalRecords = parseInt(totalRecordsResult.rows[0].total, 10);
+
             const query = `
-                SELECT locations.name, COUNT(records.location_id) AS usage_count
+                SELECT locations.name, 
+                    COUNT(records.location_id) AS usage_count,
+                    ROUND((COUNT(records.location_id) * 100.0 / $1), 2) AS usage_percentage
                 FROM locations
                 LEFT JOIN records ON locations.id = records.location_id
+                                WHERE locations.anonymized IS NOT TRUE  -- Exclude anonymized locations
                 GROUP BY locations.name
                 ORDER BY usage_count DESC
                 LIMIT 5
             `;
-            const result = await client.query(query);
+            const result = await client.query(query, [totalRecords]);
 
             res.json(result.rows); // Sends the result as JSON
         } catch (error) {
@@ -27,4 +35,139 @@ const top5Locations = (app, dbConfig) => {
     });
 };
 
-module.exports = top5Locations;
+// Function for getting first and last record each year
+const firstLastYear = (app, dbConfig) => {
+    app.get('/api/yearly-first-last', async (req, res) => { //Fetching route
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                WITH yearly_records AS (
+                    SELECT 
+                        EXTRACT(YEAR FROM timestamp) AS year,
+                        id,
+                        timestamp
+                    FROM records
+                ),
+                first_records AS (
+                    SELECT DISTINCT ON (year) 
+                        year, 
+                        id AS first_record_id, 
+                        timestamp AS first_record_timestamp
+                    FROM yearly_records
+                    ORDER BY year, timestamp ASC
+                ),
+                last_records AS (
+                    SELECT DISTINCT ON (year) 
+                        year, 
+                        id AS last_record_id, 
+                        timestamp AS last_record_timestamp
+                    FROM yearly_records
+                    ORDER BY year, timestamp DESC
+                )
+                SELECT 
+                    f.year,
+                    f.first_record_id,
+                    f.first_record_timestamp,
+                    l.last_record_id,
+                    l.last_record_timestamp
+                FROM first_records f
+                JOIN last_records l ON f.year = l.year
+                ORDER BY f.year;
+            `;
+            const result = await client.query(query);
+            res.json(result.rows); // Sends the result as JSON
+        } catch (error) {
+            console.error('Error fetching yearly records:', error);
+            res.status(500).send({ message: 'An error occurred while fetching yearly records' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+const earliestLatestHour = (app, dbConfig) => {
+    app.get('/api/earliest-latest-finding', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const earliestQuery = `
+                SELECT id, timestamp
+                FROM records
+                WHERE TO_CHAR(timestamp, 'HH24:MI:SS') = (
+                    SELECT MIN(TO_CHAR(timestamp, 'HH24:MI:SS')) FROM records
+                );
+            `;
+
+            const latestQuery = `
+                SELECT id, timestamp
+                FROM records
+                WHERE TO_CHAR(timestamp, 'HH24:MI:SS') = (
+                    SELECT MAX(TO_CHAR(timestamp, 'HH24:MI:SS')) FROM records
+                );
+            `;
+
+            // Execute queries
+            const earliestResult = await client.query(earliestQuery);
+            const latestResult = await client.query(latestQuery);
+
+            const earliest = earliestResult.rows[0];
+            const latest = latestResult.rows[0];
+
+            res.json({
+                earliest: { 
+                    id: earliest.id, 
+                    timestamp: earliest.timestamp,
+                },
+                latest: { 
+                    id: latest.id,
+                    timestamp: latest.timestamp,
+                },
+            });
+        } catch (error) {
+            console.error('Error fetching earliest and latest findings:', error);
+            res.status(500).send({ message: 'An error occurred while fetching earliest and latest findings' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+const mostInDay = (app, dbConfig) => {
+    app.get('/api/day-most-findings', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            // Query for the day with the most findings
+            const dayQuery = `
+                SELECT DATE(timestamp) AS date, COUNT(*) AS count
+                FROM records
+                GROUP BY DATE(timestamp)
+                ORDER BY count DESC
+                LIMIT 1;
+            `;
+
+            // Execute the queries
+            const dayResult = await client.query(dayQuery);
+
+            const dayWithMostFindings = dayResult.rows[0];
+
+            res.json({
+                dayWithMostFindings: {
+                    date: dayWithMostFindings.date,
+                    count: dayWithMostFindings.count
+                },
+            });
+        } catch (error) {
+            console.error('Error fetching day and hour with most findings:', error);
+            res.status(500).send({ message: 'An error occurred while fetching findings' });
+        } finally {
+            await client.end();
+        }
+    });
+};  
+
+module.exports = { top5Locations, firstLastYear, earliestLatestHour, mostInDay };

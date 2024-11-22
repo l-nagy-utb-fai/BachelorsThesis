@@ -24,6 +24,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
         th, td {
             padding: 10px;
@@ -46,6 +47,7 @@
                 <tr>
                     <th>Location Name</th>
                     <th>Usage Count</th>
+                    <th>Percentge</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,9 +55,58 @@
             </tbody>
         </table>
         <div id="errorMessage" class="error"></div>
+
+        <h1>First and Last Records for Each Year</h1>
+        <table id="yearlyRecordsTable">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>First Record ID</th>
+                    <th>First Record Timestamp</th>
+                    <th>Last Record ID</th>
+                    <th>Last Record Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Yearly data will be inserted here -->
+            </tbody>
+        </table>
+        <div id="yearlyErrorMessage" class="error"></div>
+        
+        <h1>Earliest and Latest Findings by Time</h1>
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="earliestFindingRow"></tr>
+                <tr id="latestFindingRow"></tr>
+            </tbody>
+        </table>
+        <div id="errorMessage" class="error"></div>
+
+        <h1>Day with Most Findings</h1>
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Details</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="dayRow"></tr>
+            </tbody>
+        </table>
+        <div id="errorMessage" class="error"></div>
+
     </div>  
     <script>
-                async function fetchTopLocations() {
+        async function fetchTopLocations() {
             try {
                 const response = await fetch('/api/top-locations');
                 if (!response.ok) {
@@ -70,12 +121,15 @@
                     const row = document.createElement('tr');
                     const nameCell = document.createElement('td');
                     const countCell = document.createElement('td');
+                    const percentageCell = document.createElement('td');
 
                     nameCell.textContent = location.name;
                     countCell.textContent = location.usage_count;
+                    percentageCell.textContent = `${location.usage_percentage}%`;
 
                     row.appendChild(nameCell);
                     row.appendChild(countCell);
+                    row.appendChild(percentageCell);
                     tableBody.appendChild(row);
                 });
             } catch (error) {
@@ -83,7 +137,99 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchTopLocations);
+        async function fetchYearlyRecords() {
+            try {
+                const response = await fetch('/api/yearly-first-last');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+
+                const tableBody = document.querySelector('#yearlyRecordsTable tbody');
+                tableBody.innerHTML = '';
+
+                data.forEach(record => {
+                    const row = document.createElement('tr');
+                    const yearCell = document.createElement('td');
+                    const firstIdCell = document.createElement('td');
+                    const firstTimestampCell = document.createElement('td');
+                    const lastIdCell = document.createElement('td');
+                    const lastTimestampCell = document.createElement('td');
+
+                    yearCell.textContent = record.year;
+                    firstIdCell.textContent = record.first_record_id;
+                    firstTimestampCell.textContent = new Date(record.first_record_timestamp).toLocaleString();
+                    lastIdCell.textContent = record.last_record_id;
+                    lastTimestampCell.textContent = new Date(record.last_record_timestamp).toLocaleString();
+
+                    row.appendChild(yearCell);
+                    row.appendChild(firstIdCell);
+                    row.appendChild(firstTimestampCell);
+                    row.appendChild(lastIdCell);
+                    row.appendChild(lastTimestampCell);
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                document.querySelector('#yearlyErrorMessage').textContent = 'Failed to load yearly records: ' + error.message;
+            }
+        }
+
+        async function fetchEarliestLatest() {
+        try {
+            const response = await fetch('/api/earliest-latest-finding');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+
+            const table = document.querySelector('#findingsTable tbody');
+
+            // Populate earliest finding row
+            const earliestRow = document.querySelector('#earliestFindingRow');
+            earliestRow.innerHTML = `
+                <td>Earliest</td>
+                <td>${data.earliest.id}</td>
+                <td>${new Date(data.earliest.timestamp).toLocaleString()}</td>
+            `;
+
+            // Populate latest finding row
+            const latestRow = document.querySelector('#latestFindingRow');
+            latestRow.innerHTML = `
+                <td>Latest</td>
+                <td>${data.latest.id}</td>
+                <td>${new Date(data.latest.timestamp).toLocaleString()}</td>
+            `;
+        } catch (error) {
+            document.querySelector('#errorMessage').textContent = 'Failed to load findings by time: ' + error.message;
+        }
+    }
+
+    async function fetchDayWithMost() {
+        try {
+            const response = await fetch('/api/day-most-findings');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+
+            const dayRow = document.querySelector('#dayRow');
+            dayRow.innerHTML = `
+                <td>Day with Most Findings</td>
+                <td>${new Date(data.dayWithMostFindings.date).toLocaleDateString()}</td>
+                <td>${data.dayWithMostFindings.count}</td>
+            `;
+
+        } catch (error) {
+            document.querySelector('#errorMessage').textContent = 'Failed to load findings: ' + error.message;
+        }
+    }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTopLocations();
+            fetchYearlyRecords();
+            fetchEarliestLatest();
+            fetchDayWithMost();
+        });
     </script>
 </body>
 </html>
