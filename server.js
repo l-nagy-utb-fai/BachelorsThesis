@@ -76,22 +76,27 @@ app.get('/record', async (req, res) => {
                 records.id, 
                 records.timestamp, 
                 CASE
+                    WHEN records.location_id = 999 THEN '0.0000'
                     WHEN locations.anonymized THEN '0.0000'
                     ELSE records.latitude
                 END AS latitude,
                 CASE
+                    WHEN records.location_id = 999 THEN '0.0000'
                     WHEN locations.anonymized THEN '0.000'
                     ELSE records.longitude
                 END AS longitude,
                 CASE
+                    WHEN records.location_id = 999 THEN 'Adresa anonymizována'
                     WHEN locations.anonymized THEN 'Adresa anonymizována'
                     ELSE records.address
                 END AS address,
                 CASE
+                    WHEN records.location_id = 999 THEN 'Lokace nezadána'
                     WHEN locations.anonymized THEN 'Lokace anonymizována'
                     ELSE COALESCE(locations.name, 'N/A')
                 END AS location_name,
                 CASE
+                    WHEN records.location_id = 999 THEN 'Lokace nezadána'
                     WHEN locations.anonymized THEN 'Komentář anonymizován'
                     ELSE COALESCE(locations.comment, '')
                 END AS location_comment, 
@@ -112,6 +117,8 @@ app.get('/record', async (req, res) => {
         const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
         const translatedStatus = translateStatus(record.status);
         
+        const pathminiature = record.pathminiature || record.path;
+
         const formattedRecord = {
             id: record.id,
             timestampFormatted: formattedTimestamp,
@@ -124,7 +131,7 @@ app.get('/record', async (req, res) => {
             comment: record.location_comment,
             isAnonymized: record.location_comment === 'Komentář anonymizován',
             statusTransformed: translatedStatus,
-            pathminiature: record.pathminiature,
+            pathminiature: pathminiature,
             path: record.path
         };     
 
@@ -148,34 +155,42 @@ app.get('/api/records', async (req, res) => {
                 records.id, 
                 records.timestamp, 
                     CASE
+                        WHEN records.location_id = 999 THEN '0.0000'
                         WHEN locations.anonymized THEN '0.0000'
                         ELSE records.latitude
                     END AS latitude,
                     CASE
+                        WHEN records.location_id = 999 THEN '0.0000'
                         WHEN locations.anonymized THEN '0.000'
                         ELSE records.longitude
                     END AS longitude,
                     CASE
+                        WHEN records.location_id = 999 THEN 'Adresa anonymizována'
                         WHEN locations.anonymized THEN 'Adresa anonymizována'
                         ELSE records.address
                     END AS address,
                     CASE
+                        WHEN records.location_id = 999 THEN 'Lokace nezadána'
                         WHEN locations.anonymized THEN 'Lokace anonymizována'
                         ELSE COALESCE(locations.name, 'N/A')
                     END AS location_name,
                     CASE
+                        WHEN records.location_id = 999 THEN 'Lokace nezadána'
                         WHEN locations.anonymized THEN 'Komentář anonymizován'
                         ELSE COALESCE(locations.comment, '')
                     END AS location_comment, 
                     records.status, 
-                    records.pathminiature
+                    records.pathminiature,
+                    records.path
             FROM records
             LEFT JOIN locations ON records.location_id = locations.id
         `;
         const result = await client.query(query);
-        
+    
         const records = result.rows.map(record => {
             const formattedCoordinates = formatCoordinates(record.latitude, record.longitude);
+            const pathMiniature = record.pathminiature || record.path;
+
             return {
                 id: record.id,
                 timestamp: formatTimestamp(new Date(record.timestamp)),
@@ -185,7 +200,7 @@ app.get('/api/records', async (req, res) => {
                 address: record.address,
                 locationName: record.location_name,
                 locationComment: record.location_comment,
-                pathMiniature: record.pathminiature
+                pathMiniature: pathMiniature
             };
         });
         res.json({ records });

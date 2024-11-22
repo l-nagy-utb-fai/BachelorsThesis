@@ -48,15 +48,15 @@ async function uploadHEIC (req, res, dbConfig) {
 
         for (const key in filePairs) {
             const { ID, status, locationId, original, miniature } = filePairs[key];
-            if (!original || !miniature) {
-                return res.status(400).send({ message: 'Original and Miniature file pair not found' });
+            if (!original) {
+                return res.status(400).send({ message: 'Original file not found' });
             }
 
             const originalPath = path.join(uploadDir, original.filename);
-            const miniaturePath = path.join(uploadDir, miniature.filename);
+            const miniaturePath = miniature ? path.join(uploadDir, miniature.filename) : null;
 
             const jpegOriginalPath = await convertHeicToJpeg(originalPath);
-            const jpegMiniaturePath = await convertHeicToJpeg(miniaturePath);
+            const jpegMiniaturePath = miniature ? await convertHeicToJpeg(miniaturePath) : null;
 
             // Insert metadata for the "Original" file
             await insertMetadata(jpegOriginalPath, jpegMiniaturePath, locationId, status, client);
@@ -73,13 +73,13 @@ async function uploadHEIC (req, res, dbConfig) {
 
 // Extract location ID and status from file name
 const parseFileName = (fileName) => {
-    const regex = /^(\d{4})\+(\d{3})\+([A-Za-z])\+([OM])\.heic$/i; // Match 4 digits, followed by anything but '+', followed by 3 digits, a status letter, and O/M    const match = fileName.match(regex);
+    const regex = /^(\d{6})\+(\d{3})\+([A-Za-z])\+([OM])\.heic$/i; // Match 4 digits, followed by anything but '+', followed by 3 digits, a status letter, and O/M
     const match = fileName.match(regex);
 
     if (match && match.length === 5) {
         const ID = parseInt(match[1], 10);
-        const locationId = parseInt(match[2], 10); // Convert the first part (location ID) to an integer
-        const status = match[3]; // Fourth group is status
+        const locationId = parseInt(match[2], 10) || 999; // Convert the first part (location ID) to an integer
+        const status = match[3] || 'S'; // Fourth group is status
         const type = match[4]; // Fifth group is O/M for Original/Miniature
         return { ID, status, locationId, type };
     }
@@ -107,7 +107,7 @@ async function insertMetadata (filePath, miniatureFilePath, locationId, status, 
 
     // Convert the absolute path to a relative path
     const relativePath = path.relative(__dirname, filePath).replace(/\\/g, '/');//Absolute path to relative
-    const relativeMiniaturePath = path.relative(__dirname, miniatureFilePath).replace(/\\/g, '/');
+    const relativeMiniaturePath = miniatureFilePath ? path.relative(__dirname, miniatureFilePath).replace(/\\/g, '/') : null;
 
     // Get the address using reverse geocoding
     const address = await reverseGeocode(latitude, longitude);
