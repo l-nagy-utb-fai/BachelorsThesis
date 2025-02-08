@@ -69,22 +69,82 @@
             font-family: 'Raleway', sans-serif; /* Use Raleway font */
             text-shadow: 2px 2px 2px rgba(238,239,32,0.3);
         }
-        .mainPage-button {
-            font-size: 14px;
-            padding: 8px 16px;
-            font-family: 'Raleway', sans-serif;
-            border: 1px solid black;
-            border-radius: 5px;
-            background-color: #eeef20;
-            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+      
+        .menu-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px; /* Initial width */
+            height: 50px; /* Initial height */
+            background-color: #aacc00;
+            border-radius: 10px;
+            overflow: hidden;
             cursor: pointer;
+            transition: width 0.3s ease, height 0.3s ease;
+            z-index: 9999; /* Ensure menu is above other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;  
+            border: 1px solid black;
+            margin-right: 16px;
+            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            fill: black;
+        }
+
+        .menu-open .menu-icon {
+            display: none;
+        }        
+
+        .menu-open {
+            width: 150px; /* Expanded width */
+            height: 110px; /* Expanded height */
+            background-color: #eeef20
+        }
+
+        .menu-items {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 16px;
+        }
+
+        .menu-open .menu-items {
+            display: flex;
+        }
+
+        .menu-item {
+            font-family: 'Raleway', sans-serif;
+            margin: 5px;
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .menu-item:hover {
+            color: rgba(0, 0, 0, 0.7);
         }  
     </style>
 </head>
 <body>
+    <div class="menu-container" onclick="toggleMenu()">
+        <img src="menu_icon.svg" alt="Menu Icon" class="menu-icon">
+        <div class="menu-items">
+            <a href="/zaznamy" class="menu-item">Záznamy</a>
+            <a href="/statistiky" class="menu-item">Statistiky</a>
+            <a href="/" class="menu-item">Úvodní stránka</a>
+        </div>
+    </div>
+
     <div class="header-container">
         <h1>Seznam záznamů</h1>
-        <button class="mainPage-button" onclick="window.location.href='/'">Zpět</button>
     </div>
     <div class="table-container">
     <table id="recordsTable">
@@ -108,6 +168,11 @@
     </div>
 
     <script>
+        function toggleMenu() {
+                    const menu = document.querySelector('.menu-container');
+                    menu.classList.toggle('menu-open');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Fetch records from the server
             fetch('/api/records')

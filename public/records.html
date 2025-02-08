@@ -100,16 +100,6 @@
             max-height: 200px;
             object-fit: contain;
         }
-        .database-button {
-            font-family: 'Raleway', sans-serif;
-            margin-right: 16px;
-            border: 1px solid black;
-            border-radius: 5px;
-            background-color: #aacc00;
-            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
-            cursor: pointer;
-        }  
-
         /* Fixed height for the photo container */
         #photo {
             flex: 1; /* Set fixed height */
@@ -149,9 +139,79 @@
             flex: 1;
             padding: 10px;
         }
+
+        .menu-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px; /* Initial width */
+            height: 50px; /* Initial height */
+            background-color: #aacc00;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: width 0.3s ease, height 0.3s ease;
+            z-index: 9999; /* Ensure menu is above other content */
+            display: flex;
+            justify-content: center;
+            align-items: center;  
+            border: 1px solid black;
+            margin-right: 16px;
+            box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            fill: black;
+        }
+
+        .menu-open .menu-icon {
+            display: none;
+        }        
+
+        .menu-open {
+            width: 150px; /* Expanded width */
+            height: 110px; /* Expanded height */
+            background-color: #eeef20
+        }
+
+        .menu-items {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .menu-open .menu-items {
+            display: flex;
+        }
+
+        .menu-item {
+            font-family: 'Raleway', sans-serif;
+            margin: 5px;
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .menu-item:hover {
+            color: rgba(0, 0, 0, 0.7);
+        }  
     </style>
 </head>
 <body>
+    <div class="menu-container" onclick="toggleMenu()">
+        <img src="menu_icon.svg" alt="Menu Icon" class="menu-icon">
+        <div class="menu-items">
+            <a href="/seznam" class="menu-item">Seznam</a>
+            <a href="/statistiky" class="menu-item">Statistiky</a>
+            <a href="/" class="menu-item">Úvodní stránka</a>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <div class="record-form">
@@ -161,7 +221,6 @@
                     <button type="submit">Vyhledat</button>
                 </form>
             </div>
-            <button class="database-button" onclick="window.location.href='/seznam'">Databáze</button>
         </div>
         <div class="content">
             <div class="left">
@@ -202,6 +261,11 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+
+        function toggleMenu() {
+                    const menu = document.querySelector('.menu-container');
+                    menu.classList.toggle('menu-open');
+        }
 
         // Function to initialize and display the map
         let map = null; // Variable to hold the map instance

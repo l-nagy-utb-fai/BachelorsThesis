@@ -168,6 +168,31 @@ const mostInDay = (app, dbConfig) => {
             await client.end();
         }
     });
-};  
+};
 
-module.exports = { top5Locations, firstLastYear, earliestLatestHour, mostInDay };
+const byYear = (app, dbConfig) => {
+    app.get('/api/findings-by-year', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                SELECT EXTRACT(YEAR FROM records.timestamp) AS year, 
+                       COUNT(*) AS total_findings
+                FROM records
+                GROUP BY year
+                ORDER BY year ASC;
+            `;
+            const result = await client.query(query);
+
+            res.json(result.rows);
+        } catch (error) {
+            console.error('Error fetching yearly findings:', error);
+            res.status(500).send({ message: 'An error occurred while fetching yearly findings' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+module.exports = { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear };
