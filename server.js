@@ -5,7 +5,7 @@ const { Client } = require('pg'); //Interaction with database
 const { spawn } = require('child_process');
 const bodyParser = require('body-parser');
 const { upload, uploadDir, uploadHEIC, uploadLocation, formatTimestamp, formatCoordinates, translateStatus, possibleStatuses } = require('./uploadData');
-const { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear } = require('./queries');
+const { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear, byMonth, byDay, byHour, mostInHour } = require('./queries');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
@@ -310,7 +310,10 @@ firstLastYear(app, dbConfig);
 earliestLatestHour(app, dbConfig);
 mostInDay (app, dbConfig);
 byYear (app, dbConfig);
-
+byMonth (app, dbConfig);
+byDay(app, dbConfig);
+byHour(app, dbConfig);
+mostInHour(app, dbConfig);
 
 const SECRET_KEY = process.env.SECRET_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;

@@ -17,7 +17,10 @@
             margin: 15px;
             padding: 0;
             gap: 15px; /* Margin of 10px between containers */
-        }
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            background-attachment: fixed; /* Keep the gradient fixed during scrolling */
+            background-size: cover; /* Ensure the background covers the entire page */
+        }        
         .container {
             max-width: 1000px;
             width: 100%;
@@ -181,39 +184,73 @@
         </div>
     </div>
         
-        <div class="container">
-        <h1>Earliest and Latest Findings by Time</h1>
-        <table id="findingsTable">
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>ID</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr id="earliestFindingRow"></tr>
-                <tr id="latestFindingRow"></tr>
-            </tbody>
-        </table>
-        <div id="errorMessage" class="error"></div>
-
-        <h1>Day with Most Findings</h1>
-        <table id="findingsTable">
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Details</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr id="dayRow"></tr>
-            </tbody>
-        </table>
-        <div id="errorMessage" class="error"></div>
-
+    <div class="container">
+            <h1>Nálezy dle měsíců</h1>
+            <canvas id="monthlyFindingsChart" width="400" height="150"></canvas>
     </div>
+
+    <div class="container" style="display: flex; gap: 20px; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1; max-width: 70%;">
+            <h1>Nálezy dle dní v týdnu</h1>
+            <canvas id="dailyFindingsChart" width="400" height="200"></canvas>
+        </div>
+
+        <div style="flex: 2; max-width: 30%; width: 100%;">
+            <h1>Den s nejvíce nálezy</h1>
+            <table id="findingsTable">
+                <thead>
+                    <tr>
+                        <th>Den</th>
+                        <th>Nálezů</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="dayRow"></tr>
+                </tbody>
+            </table>
+            <div id="errorMessage" class="error"></div>
+        </div>
+    </div>
+
+    <div class="container" style="display: flex; gap: 20px; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1; max-width: 65%;">
+            <h1>Nálezy dle hodin</h1>
+            <canvas id="hourlyFindingsChart" width="400" height="200"></canvas>
+        </div>
+
+        <div style="flex: 2; max-width: 35%; width: 100%;">
+            <h1>Nejvíce nálezů za hodinu</h1>
+            <table id="productiveHourTable">
+                <thead>
+                    <tr>
+                        <th>Den</th>
+                        <th>Hodina</th>
+                        <th>Nálezů</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="productiveHourRow"></tr>
+                </tbody>
+            </table>
+            <div id="errorMessage" class="error"></div>
+
+            <h1>Nejdřívější a nejpozdější nález</h1>
+            <table id="findingsTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Přesný čas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="earliestFindingRow"></tr>
+                    <tr id="latestFindingRow"></tr>
+                </tbody>
+            </table>
+            <div id="errorMessage" class="error"></div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <script>
         function toggleMenu() {
@@ -297,7 +334,7 @@
             // Populate earliest finding row
             const earliestRow = document.querySelector('#earliestFindingRow');
             earliestRow.innerHTML = `
-                <td>Earliest</td>
+                <td>Nejdřívější</td>
                 <td>${data.earliest.id}</td>
                 <td>${new Date(data.earliest.timestamp).toLocaleString()}</td>
             `;
@@ -305,7 +342,7 @@
             // Populate latest finding row
             const latestRow = document.querySelector('#latestFindingRow');
             latestRow.innerHTML = `
-                <td>Latest</td>
+                <td>Nejpozdější</td>
                 <td>${data.latest.id}</td>
                 <td>${new Date(data.latest.timestamp).toLocaleString()}</td>
             `;
@@ -324,7 +361,6 @@
 
             const dayRow = document.querySelector('#dayRow');
             dayRow.innerHTML = `
-                <td>Day with Most Findings</td>
                 <td>${new Date(data.dayWithMostFindings.date).toLocaleDateString()}</td>
                 <td>${data.dayWithMostFindings.count}</td>
             `;
@@ -339,7 +375,6 @@
         const response = await fetch('/api/findings-by-year');
         const data = await response.json();
         console.log(data);
-
 
         // Extract years and findings count
         const years = data.map(row => row.year);
@@ -382,12 +417,210 @@
     }
 }
 
+async function fetchFindingsByMonth() {
+    try {
+        const response = await fetch('/api/findings-by-month');
+        const data = await response.json();
+        console.log(data);
+
+        const monthNames = [
+            'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 
+            'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
+        ];
+
+        // Initialize data structures for months and findings
+        let months = Array(12).fill(0);  // Default to 0 findings for all 12 months
+        let findings = Array(12).fill(0);  // Default to 0 findings for all months
+
+        // Map data to months and findings
+        data.forEach(row => {
+            const month = row.month - 1; // Adjust for 0-indexed array (e.g., January = 0)
+            findings[month] = parseInt(row.total_findings, 10); // Set the number of findings
+        });
+
+        const monthLabels = monthNames;
+
+        // Total findings for percentage calculation
+        const totalFindings = findings.reduce((sum, value) => sum + value, 0);
+
+        // Render Chart
+        new Chart(document.getElementById('monthlyFindingsChart'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Počet nálezů',
+                    data: findings,
+                    backgroundColor: 'rgb(43, 147, 72)',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                const value = tooltipItem.raw; // Get the findings count
+                                const percentage = ((value / totalFindings) * 100).toFixed(1); // Calculate percentage
+                                return `Počet nálezů: ${value} (${percentage} %)`; // Show count + percentage
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching monthly findings:', error);
+    }
+}
+
+async function fetchFindingsByDay() {
+    try {
+        const response = await fetch('/api/findings-by-day');
+        const data = await response.json();
+        console.log(data);
+
+        const dayNames = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
+
+        let findings = Array(7).fill(0);  // Default to 0 findings for all months
+
+        // Map data to months and findings
+        data.forEach(row => {
+            const day = row.day_of_week; // Adjust for 0-indexed array (e.g., January = 0)
+            findings[day] = parseInt(row.total_findings, 10); // Set the number of findings
+        });
+
+        const dayLabels = dayNames;
+
+        // Total findings for percentage calculation
+        const totalFindings = findings.reduce((sum, value) => sum + value, 0);
+
+        // Render Chart
+        new Chart(document.getElementById('dailyFindingsChart'), {
+            type: 'bar',
+            data: {
+                labels: dayLabels,
+                datasets: [{
+                    label: 'Počet nálezů',
+                    data: findings,
+                    backgroundColor: 'rgb(43, 147, 72)',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                const value = tooltipItem.raw; // Get the findings count
+                                const percentage = ((value / totalFindings) * 100).toFixed(1); // Calculate percentage
+                                return `Počet nálezů: ${value} (${percentage} %)`; // Show count + percentage
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching daily findings:', error);
+    }
+}
+
+async function fetchFindingsByHour() {
+    try {
+        const response = await fetch('/api/findings-by-hour');
+        const data = await response.json();
+        console.log(data);
+
+        // Extract years and findings count
+        const hours = data.map(row => {
+            const hour = parseInt(row.hour_of_day, 10); // Convert to integer
+            const nextHour = (hour + 1) % 24;
+            return `${hour}:00-${(hour + 1)}:00`;
+        });
+        const findings = data.map(row => row.total_findings);
+        const findingsNum = data.map(row => parseInt(row.total_findings, 10));
+        const totalFindings = findingsNum.reduce((sum, value) => sum + value, 0);
+        
+        // Render Chart
+        new Chart(document.getElementById('hourlyFindingsChart'), {
+            type: 'bar',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Počet nálezů',
+                    data: findings,
+                    backgroundColor: 'rgb(43, 147, 72)',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                const value = tooltipItem.raw; // Get the findings count
+                                const percentage = ((value / totalFindings) * 100).toFixed(1); // Calculate percentage
+                                return `Počet nálezů: ${value} (${percentage} %)`; // Show count + percentage
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching yearly findings:', error);
+    }
+}
+
+async function fetchHourWithMost() {
+    try {
+        const response = await fetch('/api/hour-most-findings');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+
+        // Format the result into a human-readable string
+        const hourLabel = `${data.hour_of_day}:00-${(parseInt(data.hour_of_day, 10) + 1) % 24}:00`;
+        const dateLabel = new Date(data.date_of_day).toLocaleDateString(); // Format date to readable format
+
+        // Select the row in the table and populate it
+        const hourRow = document.querySelector('#productiveHourRow');
+        hourRow.innerHTML = `
+            <td>${dateLabel}</td>
+            <td>${hourLabel}</td>
+            <td>${data.total_findings}</td>
+        `;
+    } catch (error) {
+        document.querySelector('#errorMessage').textContent = 'Failed to load most productive hour: ' + error.message;
+    }
+}
+
         document.addEventListener('DOMContentLoaded', () => {
             fetchTopLocations();
             fetchYearlyRecords();
             fetchEarliestLatest();
             fetchDayWithMost();
             fetchFindingsByYear();
+            fetchFindingsByMonth();
+            fetchFindingsByDay();
+            fetchFindingsByHour();
+            fetchHourWithMost();
         });
     </script>
 </body>

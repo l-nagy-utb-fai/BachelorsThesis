@@ -195,4 +195,110 @@ const byYear = (app, dbConfig) => {
     });
 };
 
-module.exports = { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear };
+const byMonth = (app, dbConfig) => {
+    app.get('/api/findings-by-month', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                SELECT EXTRACT(MONTH FROM records.timestamp) AS month, 
+                       COUNT(*) AS total_findings
+                FROM records
+                GROUP BY month
+                ORDER BY month ASC;
+            `;
+            const result = await client.query(query);
+
+            res.json(result.rows);
+        } catch (error) {
+            console.error('Error fetching monthly findings:', error);
+            res.status(500).send({ message: 'An error occurred while fetching monthly findings' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+const byDay = (app, dbConfig) => {
+    app.get('/api/findings-by-day', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                SELECT 
+                    (EXTRACT(DOW FROM records.timestamp) + 6) % 7 + 1 AS day_of_week,
+                    COUNT(*) AS total_findings
+                FROM records
+                GROUP BY day_of_week
+                ORDER BY day_of_week ASC;
+            `;
+            const result = await client.query(query);
+
+            res.json(result.rows);
+        } catch (error) {
+            console.error('Error fetching findings by day of the week:', error);
+            res.status(500).send({ message: 'An error occurred while fetching findings by day' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+const byHour = (app, dbConfig) => {
+    app.get('/api/findings-by-hour', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                SELECT EXTRACT(HOUR FROM timestamp) AS hour_of_day, 
+                    COUNT(*) AS total_findings
+                FROM records
+                GROUP BY hour_of_day
+                ORDER BY hour_of_day ASC;
+            `;
+            const result = await client.query(query);
+
+            // Return the result as a JSON response
+            res.json(result.rows);
+        } catch (error) {
+            console.error('Error fetching findings by hour:', error);
+            res.status(500).send({ message: 'An error occurred while fetching findings by hour' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+const mostInHour = (app, dbConfig) => {
+    app.get('/api/hour-most-findings', async (req, res) => {
+        const client = new Client(dbConfig);
+        await client.connect();
+
+        try {
+            const query = `
+                SELECT 
+                    DATE(timestamp) AS date_of_day,
+                    EXTRACT(HOUR FROM timestamp) AS hour_of_day, 
+                    COUNT(*) AS total_findings
+                FROM records
+                GROUP BY date_of_day, hour_of_day
+                ORDER BY total_findings DESC
+                LIMIT 1;
+            `;
+            const result = await client.query(query);
+
+            // Return the result as a JSON response
+            res.json(result.rows[0]);
+        } catch (error) {
+            console.error('Error fetching most productive hour:', error);
+            res.status(500).send({ message: 'An error occurred while fetching most productive hour' });
+        } finally {
+            await client.end();
+        }
+    });
+};
+
+module.exports = { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear, byMonth, byDay, byHour, mostInHour};
