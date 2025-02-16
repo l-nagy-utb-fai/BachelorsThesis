@@ -10,6 +10,7 @@
         body {
             font-family: 'Raleway', sans-serif;
             font-size: 16px;
+            font-weight: bold;
             margin: 0;
             padding: 20px;
             overflow-x: hidden; /* Prevent horizontal scrolling */
@@ -36,7 +37,7 @@
             width: 100%;
             max-width: 420px;
             padding: 10px;
-            border: 1px solid black;
+            border: 1.8px solid black;
             box-sizing: border-box;
             border-radius: 10px;
             background-color: #eeef20; /*ffe169 */
@@ -83,7 +84,7 @@
         }
 
         .column, .row {
-            border: 1px solid black;
+            border: 1.9px solid black;
             padding: 10px;
             margin-bottom: 20px;
             box-sizing: border-box;
@@ -155,7 +156,7 @@
             display: flex;
             justify-content: center;
             align-items: center;  
-            border: 1px solid black;
+            border: 1.5px solid black;
             margin-right: 16px;
             box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
         }
@@ -242,7 +243,7 @@
                 <div class="column" id="locationName">Název lokace</div>
                 <div class="column" id="comments" style="position: relative; display: flex; justify-content: center; align-items: center;">
                     <div id="overlay" style="position: absolute; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-                        <img src="comment_icon.svg" alt="Comment Icon" style="width: 180px; height: auto; opacity: 0.20; display: block; ">
+                        <img src="comment_icon.svg" alt="Comment Icon" style="width: 165px; height: auto; opacity: 0.20; display: block; ">
                         <div id="photoText" style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); color: black; display: block; font-weight: bold; opacity: 0.3; font-size: 12px;">Komentář</div>
                     </div>
                 </div>            
@@ -271,6 +272,13 @@
         let map = null; // Variable to hold the map instance
 
         const initializeMap = (latitude, longitude) => {
+            let popupMessage = 'Nalezen zde';
+            if (latitude == 0.0000 && longitude == 0.0000) {
+                latitude = 49.2309;
+                longitude = 17.6571;
+                popupMessage = 'Nález anonymizován';
+            }
+
             if (map) {
                 map.remove(); // Remove existing map instance if it exists
             }
@@ -281,7 +289,7 @@
             }).addTo(map);
 
             L.marker([latitude, longitude]).addTo(map)
-                .bindPopup('Nalezen zde')
+                .bindPopup(popupMessage)
                 .openPopup();
         };
 
@@ -322,7 +330,15 @@
                                 }
                             });
                         document.getElementById('timestamp').innerText = '' + record.timestampFormatted;
-                        document.getElementById('coordinates').innerText = `Zeměpisná šířka: ${record.latitudeFormatted}\n Zěměpisná délka: ${record.longitudeFormatted}`;
+                        const coordinatesDiv = document.getElementById('coordinates');
+                        if ((record.latitudeFormatted === `0° 0' 0.0" S` || record.latitudeFormatted === `0° 0' 0.0" J`) &&
+                            (record.longitudeFormatted === `0° 0' 0.0" V` || record.longitudeFormatted === `0° 0' 0.0" Z`)) {
+                                coordinatesDiv.innerHTML = `Souřadnice anonymizovány`;
+                        } else {
+                            // Display the actual coordinates
+                            coordinatesDiv.innerText = `Zeměpisná šířka: ${record.latitudeFormatted}\n Zěměpisná délka: ${record.longitudeFormatted}`;
+                        }
+                        // longitude 0° 0' 0.0" V, latitude 0° 0' 0.0" S, zaznam 3
                         document.getElementById('address').innerText = '' + (record.address || '');
                         document.getElementById('locationName').innerText = '' + (record.locationName || '');
                         // Check if the comment is anonymized

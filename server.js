@@ -161,7 +161,7 @@ app.get('/api/records', async (req, res) => {
                     END AS latitude,
                     CASE
                         WHEN records.location_id = 999 THEN '0.0000'
-                        WHEN locations.anonymized THEN '0.000'
+                        WHEN locations.anonymized THEN '0.0000'
                         ELSE records.longitude
                     END AS longitude,
                     CASE

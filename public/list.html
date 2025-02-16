@@ -10,53 +10,76 @@
             background: linear-gradient(to bottom right, #2b9348, #aacc00);
             font-size: 14px;
             font-family: 'Raleway', sans-serif;
-            overflow: hidden; /* Prevent body scrolling */
-            height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent body scrolling */
+            min-height: 100vh; /* Full viewport height */
             display: flex; /* Use flexbox for layout */
             flex-direction: column; /* Stack children vertically */
         }
         .header-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 8px;
+            width: 100%;
+            padding: 20px 0;
         }
         .table-container {
-            flex-grow: 1; /* Allow this container to fill available space */
-            overflow-y: auto; /* Enable vertical scrolling */
-            margin: 0 10px; /* Add some margin to the sides of the table */
-            margin-bottom: 20px;
-            position: relative;
+            width: 100%;
+            max-width: 1200px; /* Optional: Limit width for better readability */
+            margin: 0 auto 20px auto; /* Center table and add bottom margin */
+            overflow-x: auto; /* Allow horizontal scrolling if table overflows */
+            border-radius: 8px;
         }
+        .thead-container {
+            width: 100%;
+            background-color: #aacc00;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }        
         table {
             width: 100%;
             border-collapse: collapse;
-            background: linear-gradient(to right, #eeef20, #bfd200);
+            background-color: #eeef20;
             table-layout: fixed; /* Fix the table layout to prevent resizing */
+            border: 2px solid black;
         }
+
+        th:nth-child(1), td:nth-child(1) { width: 6.6%; } /* First column */
+        th:nth-child(2), td:nth-child(2) { width: 8.8%; } /* First column */
+        th:nth-child(3), td:nth-child(3) { width: 8.8%; } /* First column */
+        th:nth-child(4), td:nth-child(4) { width: 11.1%; } /* First column */
+        th:nth-child(5), td:nth-child(5) { width: 11.1%; } /* First column */
+        th:nth-child(6), td:nth-child(6) { width: 11.1%; } /* First column */
+        th:nth-child(7), td:nth-child(7) { width: 11.1%; } /* First column */
+        th:nth-child(8), td:nth-child(8) { width: 11.1%; } /* First column */
+        th:nth-child(9), td:nth-child(9) { width: 20.3%; } /* First column */
+
         th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: left;
         }
+        tr {
+            border-top: 1.5px solid black; /* Thicker horizontal borders between rows */
+        }
         th {
-            background: linear-gradient(to top, #eeef20, #bfd200);
+            background-color: #eeef20;
             position: sticky; /* Make the header sticky */
             top: 0; /* Position it at the top of the table container */
             z-index: 10; /* Ensure it appears above other content */
             outline: 1px solid black;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        thead {
-        position: sticky;
-        top: 0; /* Ensures header is at the top of the table container */
-        background: linear-gradient(to top, #eeef20, #bfd200);
-        z-index: 10; /* Ensure it’s above table body rows */
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
         /* Add a visible top border to the header */
         thead tr {
             border-top: 2px solid black; /* Persistent top border for the header row */
+        }
+        /* Prevent body scrolling inside the table */
+        #recordsTable {
+            max-height: 400px;
+            overflow-y: auto; /* Enables vertical scrolling */
         }
         .thumbnail {
             max-width: 50px;
@@ -69,14 +92,13 @@
             font-family: 'Raleway', sans-serif; /* Use Raleway font */
             text-shadow: 2px 2px 2px rgba(238,239,32,0.3);
         }
-      
         .menu-container {
             position: absolute;
             top: 20px;
             right: 20px;
             width: 50px; /* Initial width */
             height: 50px; /* Initial height */
-            background-color: #aacc00;
+            background-color: #eeef20;
             border-radius: 10px;
             overflow: hidden;
             cursor: pointer;
@@ -85,7 +107,7 @@
             display: flex;
             justify-content: center;
             align-items: center;  
-            border: 1px solid black;
+            border: 2px solid black;
             margin-right: 16px;
             box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
         }
@@ -147,24 +169,31 @@
         <h1>Seznam záznamů</h1>
     </div>
     <div class="table-container">
-    <table id="recordsTable">
-        <thead>
-            <tr>
-                <th>Záznam</th>
-                <th>Miniatura</th>
-                <th>Status</th>
-                <th>Časová stopa</th>
-                <th>Zeměpisná šířka</th>
-                <th>Zeměpisná délka</th>
-                <th>Nejbližší adresa</th>
-                <th>Název lokace</th>
-                <th>Komentář</th>
-            </tr>
-        </thead>
-        <tbody id="recordsTableBody">
-            <!-- Table rows will be dynamically added here -->
-        </tbody>
-    </table>
+        <div class="thead-container">
+            <table id="headerTable">
+                <thead>
+                    <tr>
+                        <th>Záznam</th>
+                        <th>Miniatura</th>
+                        <th>Status</th>
+                        <th>Časová stopa</th>
+                        <th>Zeměpisná šířka</th>
+                        <th>Zeměpisná délka</th>
+                        <th>Nejbližší adresa</th>
+                        <th>Název lokace</th>
+                        <th>Komentář</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="table-container">
+            <table id="recordsTable">
+                <tbody id="recordsTableBody">
+                    <!-- Table rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
