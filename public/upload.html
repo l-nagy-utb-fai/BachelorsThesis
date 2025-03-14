@@ -136,6 +136,19 @@
                 <button type="submit">Nahrát novou lokaci</button>
             </form>
         </div>
+
+        <div class="upload-box" id="editLocation">
+            <h2>Edit Location</h2>
+                <form id="editLocationForm">
+                    <input type="text" id="LocationId" name="locationId" required placeholder="Číslo lokace">
+                    <button type="submit">Získat</button>
+                    <input type="text" id="retrievedName" name="retrievedName" placeholder="Název lokace" disabled>
+                    <input type="text" id="retrievedComment" name="retrievedComment" placeholder="Komentář k lokaci" disabled>
+                    <input type="text" id="retrievedAnonymization" name="retrievedAnonymization" placeholder="Anonymizace" disabled>
+                    <button type="submit">Změnit</button>
+                </form>
+        </div>
+
         <div class="upload-box" id="generatePDFContainer">
             <h2>Generate PDF</h2>
             <form id="generatePDF">
@@ -432,6 +445,77 @@
                 alert('Location upload failed.');
             });
         });
+
+        document.getElementById("editLocationForm").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent form from submitting
+
+            const locationId = document.getElementById("LocationId").value.trim();
+            
+            if (!locationId) {
+                alert("Zadejte číslo lokace");
+                return;
+            }
+
+            if (event.submitter.textContent === "Získat") {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/locations/${locationId}`);
+
+                    if (!response.ok) {
+                        throw new Error("Lokace nenalezena");
+                    }
+
+                    const data = await response.json();
+
+                    // Enable input fields after data retrieval
+                    document.getElementById('retrievedName').disabled = false;
+                    document.getElementById('retrievedComment').disabled = false;
+                    document.getElementById('retrievedAnonymization').disabled = false;
+
+                    // Populate fields with data
+                    document.getElementById("retrievedName").value = data.name || "";
+                    document.getElementById("retrievedComment").value = data.comment || "";
+                    document.getElementById('retrievedAnonymization').value = data.anonymized ? 'Anonymizováno' : 'Neanonymizováno';
+
+                } catch (error) {
+                    alert(error.message);
+                }
+            } else if (event.submitter.textContent === "Změnit") {
+                const name = document.getElementById("retrievedName").value.trim();
+                const comment = document.getElementById("retrievedComment").value.trim();
+                const anonymized = document.getElementById("retrievedAnonymization").value === "Anonymizováno"; // Convert to boolean
+
+                // Validate that name and comment are not empty
+                if (!name || !comment) {
+                    alert("Název a komentář nesmí být prázdné");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:3000/api/locations/${locationId}`, {
+                        method: "PUT", // HTTP method for updating data
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            name,
+                            comment,
+                            anonymized,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Chyba při aktualizaci lokace");
+                    }
+
+                    const result = await response.json();
+                    alert("Lokace byla úspěšně aktualizována!");
+
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+        });
+
     </script>
 </body>
 </html>

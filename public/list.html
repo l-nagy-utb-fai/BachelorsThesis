@@ -6,38 +6,50 @@
     <title>Database Records</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        html, body {
+            height: 100%; /* Ensure the page takes full height */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Disable scrolling */
+        }
         body {
+            position: relative;
             background: linear-gradient(to bottom right, #2b9348, #aacc00);
             font-size: 14px;
             font-family: 'Raleway', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden; /* Prevent body scrolling */
             min-height: 100vh; /* Full viewport height */
             display: flex; /* Use flexbox for layout */
             flex-direction: column; /* Stack children vertically */
+            overflow-y: auto;
         }
         .header-container {
             display: flex;
             justify-content: center;
             align-items: center;
+            max-width: 450px;
+            max-height: 30px;
             width: 100%;
+            height: 100%;
             padding: 20px 0;
+            margin: 15px auto 15px auto;
+            background-color: #eeef20;
+            border: 2px solid black;
+            border-radius: 8px;
+            box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3); /* Light shadow */
         }
         .table-container {
             width: 100%;
             max-width: 1200px; /* Optional: Limit width for better readability */
             margin: 0 auto 20px auto; /* Center table and add bottom margin */
-            overflow-x: auto; /* Allow horizontal scrolling if table overflows */
             border-radius: 8px;
         }
-        .thead-container {
-            width: 100%;
-            background-color: #aacc00;
+        thead {
             position: sticky;
             top: 0;
-            z-index: 10;
-        }        
+            background-color: #aacc00;
+            z-index: 100;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -45,7 +57,6 @@
             table-layout: fixed; /* Fix the table layout to prevent resizing */
             border: 2px solid black;
         }
-
         th:nth-child(1), td:nth-child(1) { width: 6.6%; } /* First column */
         th:nth-child(2), td:nth-child(2) { width: 8.8%; } /* First column */
         th:nth-child(3), td:nth-child(3) { width: 8.8%; } /* First column */
@@ -55,7 +66,6 @@
         th:nth-child(7), td:nth-child(7) { width: 11.1%; } /* First column */
         th:nth-child(8), td:nth-child(8) { width: 11.1%; } /* First column */
         th:nth-child(9), td:nth-child(9) { width: 20.3%; } /* First column */
-
         th, td {
             border: 1px solid black;
             padding: 8px;
@@ -65,21 +75,9 @@
             border-top: 1.5px solid black; /* Thicker horizontal borders between rows */
         }
         th {
-            background-color: #eeef20;
-            position: sticky; /* Make the header sticky */
-            top: 0; /* Position it at the top of the table container */
-            z-index: 10; /* Ensure it appears above other content */
-            outline: 1px solid black;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        /* Add a visible top border to the header */
-        thead tr {
-            border-top: 2px solid black; /* Persistent top border for the header row */
-        }
-        /* Prevent body scrolling inside the table */
-        #recordsTable {
-            max-height: 400px;
-            overflow-y: auto; /* Enables vertical scrolling */
+            background-color: #aacc00;
+            outline: 2px solid black;
+            position: relative;
         }
         .thumbnail {
             max-width: 50px;
@@ -169,8 +167,7 @@
         <h1>Seznam záznamů</h1>
     </div>
     <div class="table-container">
-        <div class="thead-container">
-            <table id="headerTable">
+            <table id="recordsTable">
                 <thead>
                     <tr>
                         <th>Záznam</th>
@@ -181,14 +178,19 @@
                         <th>Zeměpisná délka</th>
                         <th>Nejbližší adresa</th>
                         <th>Název lokace</th>
-                        <th>Komentář</th>
+                        <th>Komentář 
+                            <img src="up_arrow_icon.svg" onclick="scrollToTop()" style="cursor: pointer; width: auto; height: 20px; float: right; opacity: 0.6">
+                        </th>
                     </tr>
                 </thead>
+                <tbody id="recordsTableBody">
+                    <!-- All records will be inserted here dynamically -->
+                </tbody>
             </table>
         </div>
 
-        <div class="table-container">
-            <table id="recordsTable">
+        <div class="records-container">
+            <table>
                 <tbody id="recordsTableBody">
                     <!-- Table rows will be dynamically added here -->
                 </tbody>
@@ -214,7 +216,7 @@
                     records.forEach(record => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${record.id}.</td>
+                            <td style="text-align: center;">${record.id}.</td>
                             <td><img src="${record.pathMiniature}" alt="Thumbnail" class="thumbnail"></td>
                             <td>${record.status}</td>
                             <td>${record.timestamp}</td>
@@ -232,6 +234,11 @@
                     alert('Failed to retrieve records.');
                 });
         });
+
+        function scrollToTop(){
+            const header = document.querySelector('.header-container');
+            window.scrollTo({ top: header.offsetTop, behavior: 'smooth'});
+        }
     </script>
 </body>
 </html>

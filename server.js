@@ -304,6 +304,58 @@ app.post('/save-screenshot', (req, res) => {
     });
 });
 
+app.get('/api/locations/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const result = await client.query('SELECT * FROM locations WHERE id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Location not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching location:', error);
+        res.status(500).json({ message: 'An error occurred while fetching the location' });
+    } finally {
+        await client.end();
+    }
+});
+
+app.put('/api/locations/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, comment, anonymized } = req.body;
+
+    // Validate input data types and make sure the values are not empty
+    if (!name || !comment) {
+        return res.status(400).json({ message: "Name and comment are required." });
+    }
+
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const result = await client.query(
+            'UPDATE locations SET name = $1, comment = $2, anonymized = $3 WHERE id = $4 RETURNING *',
+            [name, comment, anonymized, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Location not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating location:', error);
+        res.status(500).json({ message: 'An error occurred while updating the location' });
+    } finally {
+        await client.end();
+    }
+});
+
 //Calling queries functions
 top5Locations(app, dbConfig);
 firstLastYear(app, dbConfig);
