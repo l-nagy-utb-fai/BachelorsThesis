@@ -136,7 +136,22 @@
                 <button type="submit">Nahrát novou lokaci</button>
             </form>
         </div>
-
+        <div class="upload-box" id="editRecord">
+            <h2>Edit Record</h2>
+                <form id="editRecordForm">
+                    <input type="text" id="recordToEdit" name="recordToEdit" required placeholder="ID záznamu">
+                    <button type="submit">Získat</button>
+                    <input type="text" id="retrievedTimestamp" name="retrievedTimestamp" placeholder="Časová stopa" disabled>
+                    <input type="text" id="retrievedLongitude" name="retrievedLongitude" placeholder="Zeměpisná délka" disabled>
+                    <input type="text" id="retrievedLatitude" name="retrievedLatitude" placeholder="Zeměpisná šířka" disabled>
+                    <input type="text" id="retrievedPath" name="retrievedPath" placeholder="Cesta k fotografii" disabled>
+                    <input type="text" id="retrievedPathminiature" name="retrievedPathminiature" placeholder="Cesta k miniatuře" disabled>
+                    <input type="text" id="retrievedLocationId" name="retrievedLocationId" placeholder="ID lokace" disabled>
+                    <input type="text" id="retrievedAddress" name="retrievedAddress" placeholder="Adresa" disabled>
+                    <input type="text" id="retrievedStatus" name="retrievedStatus" placeholder="Status" disabled>
+                    <button type="submit">Změnit</button>
+                </form>
+        </div>
         <div class="upload-box" id="editLocation">
             <h2>Edit Location</h2>
                 <form id="editLocationForm">
@@ -148,7 +163,6 @@
                     <button type="submit">Změnit</button>
                 </form>
         </div>
-
         <div class="upload-box" id="generatePDFContainer">
             <h2>Generate PDF</h2>
             <form id="generatePDF">
@@ -444,6 +458,94 @@
                 console.error('Error:', error);
                 alert('Location upload failed.');
             });
+        });
+
+        document.getElementById("editRecordForm").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent form from submitting           
+            const recordToEdit= document.getElementById("recordToEdit").value.trim();
+            
+            if (!recordToEdit) {
+                alert("Zadejte ID záznamu");
+                return;
+            }
+
+            if (event.submitter.textContent === "Získat") {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/editRecords/${recordToEdit}`);
+
+                    if (!response.ok) {
+                        throw new Error("Záznam nenalezen");
+                    }
+
+                    const data = await response.json();
+
+                    // Enable input fields after data retrieval
+                    document.getElementById('retrievedTimestamp').disabled = false;
+                    document.getElementById('retrievedLongitude').disabled = false;
+                    document.getElementById('retrievedLatitude').disabled = false;
+                    document.getElementById('retrievedPath').disabled = false;
+                    document.getElementById('retrievedPathminiature').disabled = false;
+                    document.getElementById('retrievedLocationId').disabled = false;
+                    document.getElementById('retrievedAddress').disabled = false;
+                    document.getElementById('retrievedStatus').disabled = false;
+
+                    // Populate fields with data
+                    document.getElementById('retrievedTimestamp').value = data.timestamp || "";
+                    document.getElementById('retrievedLongitude').value = data.longitude || "";
+                    document.getElementById('retrievedLatitude').value = data.latitude || "";
+                    document.getElementById('retrievedPath').value = data.path || "";
+                    document.getElementById('retrievedPathminiature').value = data.pathminiature || "";
+                    document.getElementById('retrievedLocationId').value = data.location_id || "";
+                    document.getElementById('retrievedAddress').value = data.address || "";
+                    document.getElementById('retrievedStatus').value = data.status || "";
+                } catch (error) {
+                    alert(error.message);
+                }
+            } else if (event.submitter.textContent === "Změnit") {
+                const timestamp = document.getElementById("retrievedTimestamp").value.trim();
+                const longitude = parseFloat(document.getElementById('retrievedLongitude').value.trim());
+                const latitude = parseFloat(document.getElementById('retrievedLatitude').value.trim());
+                const path = document.getElementById('retrievedPath').value.trim();
+                const pathminiature = document.getElementById('retrievedPathminiature').value.trim() || null;
+                const location_id = parseInt(document.getElementById('retrievedLocationId').value.trim(), 10);
+                const address = document.getElementById('retrievedAddress').value.trim();
+                const status = document.getElementById('retrievedStatus').value.trim();
+
+                // Validate that name and comment are not empty
+                if (!timestamp || !longitude || !latitude || !path || !location_id || !address || !status ) {
+                    alert("Kolonky nesmí být prázdné");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:3000/api/editRecords/${recordToEdit}`, {
+                        method: "PUT", // HTTP method for updating data
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            timestamp,
+                            longitude,
+                            latitude,
+                            path,
+                            pathminiature,
+                            location_id,
+                            address,
+                            status,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Chyba při aktualizaci záznamu");
+                    }
+
+                    const result = await response.json();
+                    alert("Záznam byl úspěšně aktualizován!");
+
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
         });
 
         document.getElementById("editLocationForm").addEventListener("submit", async function (event) {

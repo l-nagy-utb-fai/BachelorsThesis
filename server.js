@@ -356,6 +356,58 @@ app.put('/api/locations/:id', async (req, res) => {
     }
 });
 
+app.get('/api/editRecords/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const result = await client.query('SELECT * FROM records WHERE id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Record not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching record:', error);
+        res.status(500).json({ message: 'An error occurred while fetching the record' });
+    } finally {
+        await client.end();
+    }
+});
+
+app.put('/api/editRecords/:id', async (req, res) => {
+    const { id } = req.params;
+    const { timestamp, longitude, latitude, path, pathminiature, location_id, address, status } = req.body;
+
+    // Validate input data types and make sure the values are not empty
+    if (!timestamp || !longitude || !latitude || !path || !location_id || !address || !status ) {
+        return res.status(400).json({ message: "Boxes cannot be empty." });
+    }
+
+    const client = new Client(dbConfig);
+    await client.connect();
+
+    try {
+        const result = await client.query(
+            'UPDATE records SET timestamp = $1, longitude = $2, latitude = $3, path = $4, pathminiature = $5, location_id = $6, address = $7, status = $8 WHERE id = $9 RETURNING *',
+            [timestamp, longitude, latitude, path, pathminiature, location_id, address, status, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Record not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating record:', error);
+        res.status(500).json({ message: 'An error occurred while updating the record' });
+    } finally {
+        await client.end();
+    }
+});
+
 //Calling queries functions
 top5Locations(app, dbConfig);
 firstLastYear(app, dbConfig);
