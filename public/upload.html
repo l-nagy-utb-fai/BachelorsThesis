@@ -13,7 +13,7 @@
             grid-template-columns: 1fr 2fr 1fr;
             gap: 20px;
         }
-        .status-list, .upload-section, .location-list {
+        .status-list, .upload-section, .location-list{
             padding: 20px;
             border: 1px solid black;
             border-radius: 8px;
@@ -40,6 +40,15 @@
             border-radius: 8px;
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .miniature-upload-info{
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid black;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            overflow: hidden;
         }
 
         form {
@@ -114,8 +123,22 @@
     </style>
 </head>
 <body>
-    <div class="status-list collapsed" id="statusList">
-        <h2 class="section-heading">Status list</h2>
+    <div>
+        <div class="status-list collapsed" id="statusList">
+            <h2 class="section-heading">Status list</h2>
+        </div>
+
+        <div class="miniature-upload-info" id="miniature-upload-info">
+            Při nahrávání (doplňování) miniatur k již nahranému záznamu postupujte následovně:
+            <ol>
+                <li>Pojmenujte HEIC soubor následovně {id}+000+V+M</li>
+                <li>Nahrajte soubor v Upload files</li>
+                <li>V Edit records zadejte ID a do kolonky Cesta k miniatuře zadejte cestu v následujícím formátu
+                    /uploads/{id}+000+V+M.jpg a klikněte na Změnit.</li>
+                <li>Pokud se soubor nenahrál byl možná originál nahrán bez GPS souřadnic nebo Časové stopy a 
+                    je tedy nutné přepsat (klidně na stejné hodnoty) všechny kolonky Edit records.</li>
+            </ol>    
+        </div>
     </div>
 
     <div class="upload-section">

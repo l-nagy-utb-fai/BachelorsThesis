@@ -47,22 +47,29 @@ async function uploadHEIC (req, res, dbConfig) {
         });
 
         for (const key in filePairs) {
-            const { ID, status, locationId, original, miniature } = filePairs[key];
-            if (!original) {
-                return res.status(400).send({ message: 'Original file not found' });
+            const { status, locationId, original, miniature } = filePairs[key];
+
+            if (original) {
+                // Case 1 or 2: Original exists (with or without Miniature)
+                const originalPath = path.join(uploadDir, original.filename);
+                const jpegOriginalPath = await convertHeicToJpeg(originalPath);
+
+                let jpegMiniaturePath = null;
+                if (miniature) {
+                    const miniaturePath = path.join(uploadDir, miniature.filename);
+                    jpegMiniaturePath = await convertHeicToJpeg(miniaturePath);
+                }
+                // Insert metadata into database using the converted original and (if available) miniature paths.
+                await insertMetadata(jpegOriginalPath, jpegMiniaturePath, locationId, status, client);
+            } else if (miniature) {
+                // Case 3: Only Miniature uploaded.
+                const miniaturePath = path.join(uploadDir, miniature.filename);
+                // Convert and move the miniature file, but do not insert metadata.
+                await convertHeicToJpeg(miniaturePath);
             }
-
-            const originalPath = path.join(uploadDir, original.filename);
-            const miniaturePath = miniature ? path.join(uploadDir, miniature.filename) : null;
-
-            const jpegOriginalPath = await convertHeicToJpeg(originalPath);
-            const jpegMiniaturePath = miniature ? await convertHeicToJpeg(miniaturePath) : null;
-
-            // Insert metadata for the "Original" file
-            await insertMetadata(jpegOriginalPath, jpegMiniaturePath, locationId, status, client);
         }
 
-        res.status(200).send({ message: 'Files uploaded successfully and metadata inserted into the database' });
+        res.status(200).send({ message: 'Files uploaded successfully and metadata inserted where applicable.' });
     } catch (error) {
         console.error('Error processing files:', error);
         res.status(500).send({ message: 'An error occurred during file processing' });
@@ -98,9 +105,9 @@ async function insertMetadata (filePath, miniatureFilePath, locationId, status, 
     const data = fs.readFileSync(filePath);
     const parser = exifParser.create(data); 
     const result = parser.parse();
-    const timestamp = result.tags.DateTimeOriginal;
-    const latitude = result.tags.GPSLatitude;
-    const longitude = result.tags.GPSLongitude;
+    const timestamp = result.tags.DateTimeOriginal || '946749389';
+    const latitude = result.tags.GPSLatitude || 0.0000;
+    const longitude = result.tags.GPSLongitude || 0.0000;
 
     // Convert the timestamp to ISO 8601 format
     const isoTimestamp = epochToIso8601(timestamp);

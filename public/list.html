@@ -10,7 +10,7 @@
             height: 100%; /* Ensure the page takes full height */
             margin: 0;
             padding: 0;
-            overflow-x: hidden; /* Disable scrolling */
+            overflow-x: hidden; /* Disable horizontal scrolling */
         }
         body {
             position: relative;
@@ -31,7 +31,7 @@
             width: 100%;
             height: 100%;
             padding: 20px 0;
-            margin: 15px auto 15px auto;
+            margin: 15px auto 5px auto;
             background-color: #eeef20;
             border: 2px solid black;
             border-radius: 8px;
@@ -44,11 +44,10 @@
             border-radius: 8px;
         }
         thead {
-            position: sticky;
-            top: 0;
             background-color: #aacc00;
             z-index: 100;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            border: 2px solid black;
         }
         table {
             width: 100%;
@@ -70,14 +69,6 @@
             border: 1px solid black;
             padding: 8px;
             text-align: left;
-        }
-        tr {
-            border-top: 1.5px solid black; /* Thicker horizontal borders between rows */
-        }
-        th {
-            background-color: #aacc00;
-            outline: 2px solid black;
-            position: relative;
         }
         .thumbnail {
             max-width: 50px;
@@ -150,7 +141,47 @@
 
         .menu-item:hover {
             color: rgba(0, 0, 0, 0.7);
-        }  
+        }
+
+        /* Pagination styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        .pagination-button {
+            background-color: #eeef20;
+            border: 2px solid black;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        #goButton {
+            margin-left: -2px;
+        }
+
+        .pagination-button:hover {
+            background-color: #8ba600;
+        }
+
+        .pagination-button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+
+        .pagination-input {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: 2px solid black;
+            font-weight: bold;
+            border-radius: 5px;
+            width: 60px;
+        }
     </style>
 </head>
 <body>
@@ -166,42 +197,131 @@
     <div class="header-container">
         <h1>Seznam záznamů</h1>
     </div>
-    <div class="table-container">
-            <table id="recordsTable">
-                <thead>
-                    <tr>
-                        <th>Záznam</th>
-                        <th>Miniatura</th>
-                        <th>Status</th>
-                        <th>Časová stopa</th>
-                        <th>Zeměpisná šířka</th>
-                        <th>Zeměpisná délka</th>
-                        <th>Nejbližší adresa</th>
-                        <th>Název lokace</th>
-                        <th>Komentář 
-                            <img src="up_arrow_icon.svg" onclick="scrollToTop()" style="cursor: pointer; width: auto; height: 20px; float: right; opacity: 0.6">
-                        </th>
-                    </tr>
-                </thead>
-                <tbody id="recordsTableBody">
-                    <!-- All records will be inserted here dynamically -->
-                </tbody>
-            </table>
-        </div>
 
-        <div class="records-container">
-            <table>
-                <tbody id="recordsTableBody">
-                    <!-- Table rows will be dynamically added here -->
-                </tbody>
-            </table>
-        </div>
+    <!-- Pagination Block -->
+    <div class="pagination-container">
+        <button class="pagination-button" id="firstPage" onclick="goToFirstPage()">První</button>
+        <button class="pagination-button" id="previousPage" onclick="goToPreviousPage()">Předchozí</button>
+        <input type="number" id="pageInput" class="pagination-input" min="1" oninput="validatePageInput()" />
+        <button class="pagination-button" id="goButton" onclick="goToPage()">Jdi</button>
+        <button class="pagination-button" id="nextPage" onclick="goToNextPage()">Další</button>
+        <button class="pagination-button" id="lastPage" onclick="goToLastPage()">Poslední</button>
+        <span id="pageNumber"></span>
+    </div>
+
+    <div class="table-container">
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Záznam</th>
+                    <th>Miniatura</th>
+                    <th>Status</th>
+                    <th>Časová stopa</th>
+                    <th>Zeměpisná šířka</th>
+                    <th>Zeměpisná délka</th>
+                    <th>Nejbližší adresa</th>
+                    <th>Název lokace</th>
+                    <th>Komentář</th>
+                </tr>
+            </thead>
+            <tbody id="recordsTableBody">
+                <!-- All records will be inserted here dynamically -->
+            </tbody>
+        </table>
     </div>
 
     <script>
+        let currentPage = 1;
+        const recordsPerPage = 50;
+        let records = [];
+
         function toggleMenu() {
-                    const menu = document.querySelector('.menu-container');
-                    menu.classList.toggle('menu-open');
+            const menu = document.querySelector('.menu-container');
+            menu.classList.toggle('menu-open');
+        }
+
+        function goToFirstPage() {
+            currentPage = 1;
+            renderTable();
+            updatePaginationControls();
+        }
+
+        function goToLastPage() {
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            currentPage = totalPages;
+            renderTable();
+            updatePaginationControls();
+        }
+
+        function goToPreviousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+                updatePaginationControls();
+            }
+        }
+
+        function goToNextPage() {
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+                updatePaginationControls();
+            }
+        }
+
+        function validatePageInput() {
+            const input = document.getElementById('pageInput');
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            const pageNum = parseInt(input.value, 10);
+
+            if (pageNum < 1 || pageNum > totalPages || isNaN(pageNum)) {
+                document.getElementById('goButton').disabled = true;
+            } else {
+                document.getElementById('goButton').disabled = false;
+            }
+        }
+
+        function goToPage() {
+            const input = document.getElementById('pageInput');
+            const pageNum = parseInt(input.value, 10);
+
+            if (pageNum >= 1 && pageNum <= Math.ceil(records.length / recordsPerPage)) {
+                currentPage = pageNum;
+                renderTable();
+                updatePaginationControls();
+            }
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('recordsTableBody');
+            tableBody.innerHTML = ''; // Clear previous table rows
+
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const recordsToDisplay = records.slice(startIndex, endIndex);
+
+            recordsToDisplay.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="text-align: center;">${record.id}.</td>
+                    <td><img src="${record.pathMiniature}" alt="Thumbnail" class="thumbnail"></td>
+                    <td>${record.status}</td>
+                    <td>${record.timestamp}</td>
+                    <td>${record.latitude}</td>
+                    <td>${record.longitude}</td>
+                    <td>${record.address}</td>
+                    <td>${record.locationName}</td>
+                    <td>${record.locationComment}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            document.getElementById('pageNumber').textContent = ``;
+            document.getElementById('pageInput').value = currentPage;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -209,36 +329,15 @@
             fetch('/api/records')
                 .then(response => response.json())
                 .then(data => {
-                    const records = data.records;
-                    const tableBody = document.getElementById('recordsTableBody');
-                    tableBody.innerHTML = ''; // Clear previous table rows
-
-                    records.forEach(record => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td style="text-align: center;">${record.id}.</td>
-                            <td><img src="${record.pathMiniature}" alt="Thumbnail" class="thumbnail"></td>
-                            <td>${record.status}</td>
-                            <td>${record.timestamp}</td>
-                            <td>${record.latitude}</td>
-                            <td>${record.longitude}</td>
-                            <td>${record.address}</td>
-                            <td>${record.locationName}</td>
-                            <td>${record.locationComment}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
+                    records = data.records.sort((a, b) => a.id - b.id);
+                    renderTable();
+                    updatePaginationControls();
                 })
                 .catch(error => {
                     console.error('Error fetching records:', error);
                     alert('Failed to retrieve records.');
                 });
         });
-
-        function scrollToTop(){
-            const header = document.querySelector('.header-container');
-            window.scrollTo({ top: header.offsetTop, behavior: 'smooth'});
-        }
     </script>
 </body>
 </html>
