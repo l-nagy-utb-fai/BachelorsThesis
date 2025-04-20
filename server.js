@@ -1,14 +1,14 @@
-const express = require('express'); //Web-app framework 
+const express = require('express'); //Web-app framework
 const path = require('path'); //Path manipulation
-const fs = require('fs'); //Reading and writing TO files
+const fs = require('fs'); //Reading and writing to files
 const { Client } = require('pg'); //Interaction with database
-const { spawn } = require('child_process');
-const bodyParser = require('body-parser');
+const { spawn } = require('child_process'); // Executing external scripts
+const bodyParser = require('body-parser'); // Parsing JSON bodies
 const { upload, uploadDir, uploadHEIC, uploadLocation, formatTimestamp, formatCoordinates, translateStatus, possibleStatuses } = require('./uploadData');
 const { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear, byMonth, byDay, byHour, mostInHour } = require('./queries');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-require('dotenv').config();
+const jwt = require('jsonwebtoken'); // Creatiion a verification of JSON Web Tokens
+const cors = require('cors'); // Enabling CORS
+require('dotenv').config(); // Work with .env files
 
 const app = express(); //Instance of express app
 const PORT = 3000;
@@ -22,9 +22,8 @@ const dbConfig = {
     port: 5432,
 };
 
-//Uploading fronentd pages and JPEG photos
+// Uploading frontend pages
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(uploadDir));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
@@ -37,6 +36,10 @@ app.get('/seznam', (req, res) => {
 app.get('/statistiky', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'statistics.html'));
 });
+
+// Uploading directory for photo storage
+app.use('/uploads', express.static(uploadDir));
+
 
 // Middlewares for file upload
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -218,6 +221,7 @@ app.get('/api/statuses', (req, res) => {
 
 app.use(bodyParser.json());
 
+// Route to run external python script
 app.post('/api/generate_pdf_range', (req, res) => {
     console.log('Generate PDF range endpoint called');
     const { min_id, max_id } = req.body;
@@ -290,6 +294,7 @@ app.get('/coordinates', async (req, res) => {
     }
 });
 
+// Route for saving maps screenshots
 app.post('/save-screenshot', (req, res) => {
     const { image, recordId } = req.body;
     const base64Data = image.replace(/^data:image\/png;base64,/, '');
@@ -304,6 +309,7 @@ app.post('/save-screenshot', (req, res) => {
     });
 });
 
+// Route for getting location entry for editing
 app.get('/api/locations/:id', async (req, res) => {
     const { id } = req.params;
     const client = new Client(dbConfig);
@@ -325,6 +331,7 @@ app.get('/api/locations/:id', async (req, res) => {
     }
 });
 
+// Route for editing founded location entry
 app.put('/api/locations/:id', async (req, res) => {
     const { id } = req.params;
     const { name, comment, anonymized } = req.body;
@@ -356,6 +363,7 @@ app.put('/api/locations/:id', async (req, res) => {
     }
 });
 
+// Route for getting record for editing
 app.get('/api/editRecords/:id', async (req, res) => {
     const { id } = req.params;
     const client = new Client(dbConfig);
@@ -377,6 +385,7 @@ app.get('/api/editRecords/:id', async (req, res) => {
     }
 });
 
+// Route for editing founded record
 app.put('/api/editRecords/:id', async (req, res) => {
     const { id } = req.params;
     const { timestamp, longitude, latitude, path, pathminiature, location_id, address, status } = req.body;
@@ -419,17 +428,20 @@ byDay(app, dbConfig);
 byHour(app, dbConfig);
 mostInHour(app, dbConfig);
 
+// Loading system secrets
 const SECRET_KEY = process.env.SECRET_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-
+// Setting modules
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true}));
 
+// Route to login page
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Login validitation
 app.post('/login', (req, res) => {
     const { password } = req.body;
     if (password === ADMIN_PASSWORD) {
