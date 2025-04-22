@@ -37,7 +37,7 @@ const top5Locations = (app, dbConfig) => {
 
 // Function for getting first and last record each year
 const firstLastYear = (app, dbConfig) => {
-    app.get('/api/yearly-first-last', async (req, res) => {
+    app.get('/api/yearly-first-last', async (req, res) => { //Fetching route
         const client = new Client(dbConfig);
         await client.connect();
 

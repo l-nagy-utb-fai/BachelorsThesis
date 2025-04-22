@@ -1,9 +1,9 @@
-const fs = require('fs'); // //Reading and writing to files
-const path = require('path'); // Path manipulation
+const fs = require('fs'); // File system module
+const path = require('path'); // Path module
 const multer = require('multer'); // Multer for file uploads
 const { Client } = require('pg'); //Interaction with database
 const exifParser = require('exif-parser'); //Metadata extraction
-const fetch = require('node-fetch'); //Sending HTTP requests
+const fetch = require('node-fetch'); //Je to k něčemu?
 const convertHeicToJpeg = require('./convert');
 
 //Getting to uploads directory
