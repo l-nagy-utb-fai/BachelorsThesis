@@ -1,6 +1,6 @@
 const { Client } = require('pg'); //Interaction with database
 
-// Function for getting top 5 most used locations
+//Function for getting top 5 most used locations
 const top5Locations = (app, dbConfig) => {
     app.get('/api/top-locations', async (req, res) => { //Fetching route
         const client = new Client(dbConfig);
@@ -35,7 +35,7 @@ const top5Locations = (app, dbConfig) => {
     });
 };
 
-// Function for getting first and last record each year
+//Function for getting first and last record each year
 const firstLastYear = (app, dbConfig) => {
     app.get('/api/yearly-first-last', async (req, res) => {
         const client = new Client(dbConfig);
@@ -87,6 +87,7 @@ const firstLastYear = (app, dbConfig) => {
     });
 };
 
+//Function for getting record found earliest in the morning and latest in the night
 const earliestLatestHour = (app, dbConfig) => {
     app.get('/api/earliest-latest-finding', async (req, res) => {
         const client = new Client(dbConfig);
@@ -135,6 +136,7 @@ const earliestLatestHour = (app, dbConfig) => {
     });
 };
 
+//Function for getting a day with most finding
 const mostInDay = (app, dbConfig) => {
     app.get('/api/day-most-findings', async (req, res) => {
         const client = new Client(dbConfig);
@@ -170,6 +172,7 @@ const mostInDay = (app, dbConfig) => {
     });
 };
 
+//Function for getting number of records each year
 const byYear = (app, dbConfig) => {
     app.get('/api/findings-by-year', async (req, res) => {
         const client = new Client(dbConfig);
@@ -195,6 +198,7 @@ const byYear = (app, dbConfig) => {
     });
 };
 
+//Function for getting number of records each month regardless the year
 const byMonth = (app, dbConfig) => {
     app.get('/api/findings-by-month', async (req, res) => {
         const client = new Client(dbConfig);
@@ -220,6 +224,7 @@ const byMonth = (app, dbConfig) => {
     });
 };
 
+//Function for getting number of records for each day of the week
 const byDay = (app, dbConfig) => {
     app.get('/api/findings-by-day', async (req, res) => {
         const client = new Client(dbConfig);
@@ -246,6 +251,7 @@ const byDay = (app, dbConfig) => {
     });
 };
 
+//Function for getting number of records for each whole hour regardless of day
 const byHour = (app, dbConfig) => {
     app.get('/api/findings-by-hour', async (req, res) => {
         const client = new Client(dbConfig);
@@ -272,6 +278,7 @@ const byHour = (app, dbConfig) => {
     });
 };
 
+//Function for finding the most productive hour ever
 const mostInHour = (app, dbConfig) => {
     app.get('/api/hour-most-findings', async (req, res) => {
         const client = new Client(dbConfig);

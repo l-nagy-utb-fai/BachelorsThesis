@@ -1,13 +1,14 @@
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase import pdfmetrics
-import psycopg2
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-import sys
-import os
-from datetime import datetime
+from reportlab.pdfbase.ttfonts import TTFont #For loading fonts
+from reportlab.pdfbase import pdfmetrics #For font registration
+import psycopg2 #For database access
+from reportlab.lib.pagesizes import letter #For setting the page size
+from reportlab.pdfgen import canvas #For text writing and picture management 
+from reportlab.lib.utils import ImageReader #For loading pictures
+import sys #For path management and work with command line
+import os #For path management and work with command line
+from datetime import datetime #For modifying date and time
 
+#Database access configuration
 db_config = {
     'host': 'localhost',
     'database': 'database',
@@ -15,14 +16,17 @@ db_config = {
     'password': 'testovanikryptologie',
     'port': '5432'
 }
-mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/mapy'
 
+#Path specification
+mapsFolder = 'C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/mapy'
 fontRegular = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Regular.ttf"
 fontBold = "C:/Users/ladna/OneDrive/Desktop/Bakalarka/heic-metadata-extractor/fonts/Arial-Unicode-Bold.ttf"
 
+#Font registration
 pdfmetrics.registerFont(TTFont('Arial', fontRegular))
 pdfmetrics.registerFont(TTFont('Arial-Bold', fontBold))
 
+#For getting records in given range
 def fetch_records_in_range(min_id, max_id):
     try:
         conn = psycopg2.connect(**db_config)
@@ -44,7 +48,8 @@ def fetch_records_in_range(min_id, max_id):
     except psycopg2.Error as e:
         print(f"Error retrieving records: {e}")
         return None
-    
+
+#Coordinates formatting
 def decimal_to_dms(decimal):
     degrees = int(decimal)
     minutes_decimal = abs(decimal - degrees) * 60
@@ -52,6 +57,7 @@ def decimal_to_dms(decimal):
     seconds = round((minutes_decimal - minutes) * 60, 1)
     return degrees, minutes, seconds
 
+#Coordinates formatting
 def format_coordinates(latitude, longitude):
     latitude_suffix = 'J' if latitude < 0 else 'S'
     longitude_suffix = 'Z' if longitude < 0 else 'V'
@@ -67,6 +73,7 @@ def format_coordinates(latitude, longitude):
     
     return formatted_latitude, formatted_longitude
 
+#Timestamp formatting
 def format_timestamp(timestamp):
     days_of_week = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota']
     months = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince']
@@ -83,6 +90,7 @@ def format_timestamp(timestamp):
     
     return formatted_date
 
+ # For formatting of images and their placement
 def draw_image_preserve_aspect(c, mapPath, x, y, width, height, mini_path=None):
     mapPic = ImageReader(mapPath)
     map_width, map_height = mapPic.getSize()
@@ -163,18 +171,6 @@ def generate_pdf(records, output_file):
             c.setFont("Arial-Bold", 9)
             c.drawString(x, y, f"Lokace - {name}")
             y -= 15
-
-#           if path and os.path.exists(path):
-#               try:
-#                   img = ImageReader(path)
-#                   c.drawImage(img, 100, y-100, width=200, height=100)
-#                   y -= 120
-#               except Exception as e:
-#                   print(f"Error adding image {path}: {e}")
-#                   y -= 20
-#           else:
-#               y -= 20           
-#            y -= 40
 
             if (i + 1) % 6 == 0:
                 c.showPage()
