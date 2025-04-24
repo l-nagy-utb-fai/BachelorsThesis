@@ -122,10 +122,12 @@ def draw_image_preserve_aspect(c, mapPath, x, y, width, height, mini_path=None):
         except Exception as e:
             print(f"Error adding miniature image {mini_path}: {e}")
 
+ # For generating the PDF file
 def generate_pdf(records, output_file):
     try:
         c = canvas.Canvas(output_file, pagesize=letter)
-
+        
+        # Layout setting
         x_left = 50
         x_right = 350
         y_start = 750

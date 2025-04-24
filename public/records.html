@@ -262,7 +262,7 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-
+        //Function for opening and closing menu block
         function toggleMenu() {
                     const menu = document.querySelector('.menu-container');
                     menu.classList.toggle('menu-open');
@@ -271,6 +271,7 @@
         // Function to initialize and display the map
         let map = null; // Variable to hold the map instance
 
+        // Function for getting the map
         const initializeMap = (latitude, longitude) => {
             let popupMessage = 'Nalezen zde';
             if (latitude == 0.0000 && longitude == 0.0000) {
