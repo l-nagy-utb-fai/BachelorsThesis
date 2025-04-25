@@ -1,4 +1,5 @@
 import os
+import random
 
 def rename_files_in_folder(folder_path, start_id):
     try:
@@ -25,8 +26,11 @@ def rename_files_in_folder(folder_path, start_id):
                     print(f"Skipping file {file} (not .heic extension).")
                     continue
 
+                # Generate a random number between 1 and 10, formatted as 3 digits
+                random_number = f"{random.randint(1, 10):03d}"
+
                 # Generate the new filename following the pattern 'ID+001+S+O'
-                new_file_name = f"{current_id:06d}+001+S+O.heic"
+                new_file_name = f"{current_id:06d}+{random_number}+V+O.heic"
                 
                 # Define the full paths for the old and new file names
                 old_file_path = os.path.join(folder_path, file)
