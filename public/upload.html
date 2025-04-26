@@ -77,21 +77,7 @@
         button[type="submit"]:hover {
             background-color: greenyellow; /* Darker background color on hover */
         }
-/*        .location-list {
-            margin-top: 20px; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-        } */
         .location-item,
-        
-        /*{
-            display: inline-block;
-            margin-right: 20px;
-        } 
-        .status-list {
-            margin-bottom: 20px;
-        } */
         .status-item {
             display: inline-block;
             margin-bottom: 10px;
@@ -143,7 +129,7 @@
 
     <div class="upload-section">
         <div class="upload-box" id="uploadFormContainer">
-            <h2>Upload files</h2>
+            <h2>Upload Files</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <input type="file" id="heicFile" name="heicFiles" multiple accept=".heic">
                 <input type="submit" value="Upload">
@@ -177,6 +163,7 @@
         </div>
         <div class="upload-box" id="editLocation">
             <h2>Edit Location</h2>
+            <h5>Poslední kolonka akceptuje hodnoty "Anonymizováno" a "Neanonymizováno"</h5>
                 <form id="editLocationForm">
                     <input type="text" id="LocationId" name="locationId" required placeholder="Číslo lokace">
                     <button type="submit">Získat</button>
@@ -186,16 +173,9 @@
                     <button type="submit">Změnit</button>
                 </form>
         </div>
-        <div class="upload-box" id="generatePDFContainer">
-            <h2>Generate PDF</h2>
-            <form id="generatePDF">
-                <input type ="number" id="minId" name="min_id" placeholder="Min ID" required>
-                <input type ="number" id="maxId" name="max_id" placeholder="Max ID" required>
-                <button class="button" id="submit">Generate PDF</button>
-            </form>
-        </div>
+
         <div class="upload-box" id="mapHelperContainer">
-            <h2>Map helper</h2>
+            <h2>Map Helper</h2>
             <form id="mapForm">
                 <input type="number" id="recordId" name="recordId" placeholder="Record ID" required>
                 <button type="submit">Vyhledat</button>
@@ -203,6 +183,14 @@
                     <div id="map"></div>
                 </div>
                 <button id="screenshotButton">Take Screenshot</button>
+            </form>
+        </div>
+        <div class="upload-box" id="generatePDFContainer">
+            <h2>Generate PDF</h2>
+            <form id="generatePDF">
+                <input type ="number" id="minId" name="min_id" placeholder="Min ID" required>
+                <input type ="number" id="maxId" name="max_id" placeholder="Max ID" required>
+                <button class="button" id="submit">Generate PDF</button>
             </form>
         </div>
     </div>
@@ -229,101 +217,19 @@
                 document.getElementById('content').innerHTML = content;
             } else {
                 alert('Access denied. Please log in.');
-                window.location.href = 'login.html'; // Redirect to login page
+                window.location.href = 'BBx8olop'; // Redirect to login page
             }
         }
 
         fetchUploadPage();
 
-        document.getElementById('screenshotButton').addEventListener('click', function() {
-            const mapContainer = document.getElementById('mapContainer');
-            const recordId = this.dataset.recordId;            
-            
-            leafletImage(map, function(err, canvas) {
-                if (err) {
-                    console.error('Error generating map image:', err);
-                    alert('Failed to generate map image.');
-                    return;
-                }
-                const dataURL = canvas.toDataURL('image/png');
-                fetch('/save-screenshot', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ image: dataURL, recordId: recordId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Screenshot saved:', data.message);
-                    alert('Screenshot saved successfully.');
-                })
-                .catch(error => {
-                    console.error('Error saving screenshot:', error);
-                    alert('Failed to save screenshot.');
-                });
-            });
-        });
-
-        let map = null; // Variable to hold the map instance
-        const initializeMap = (latitude, longitude) => {
-            if (map) {
-                map.remove(); // Remove existing map instance if it exists
-            }
-            map = L.map('mapContainer').setView([latitude, longitude], 18);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            L.marker([latitude, longitude]).addTo(map)
-                .bindPopup('Nalezen zde')
-                .openPopup();
-        };
-
-        // Function to retrieve data from the database
-        const retrieveCoordinates = (recordId) => {
-            fetch(`/coordinates?id=${recordId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to retrieve coordinates');
-                    } return response.json();
-                })
-                .then(data => {
-                    const mapDiv = document.getElementById('mapContainer');
-                    mapDiv.innerText = '';
-                    initializeMap(data.latitude, data.longitude);
-                    document.getElementById('screenshotButton').dataset.recordId = recordId;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to retrieve data from the database.');
-                });
-        };
-
-        document.getElementById('mapForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const recordId = document.getElementById('recordId').value.trim();
-            if (!recordId) {
-                alert('Please enter a record ID');
-                return;
-            }
-            retrieveCoordinates(recordId);
-        });
+        document.getElementById('statusList').addEventListener('click', toggleStatusList);
 
         function toggleStatusList() {
             const statusList = document.getElementById('statusList');
             statusList.classList.toggle('expanded');
             statusList.classList.toggle('collapsed');
             fetchAndDisplayStatuses();
-        }
-
-        function toggleLocationList() {
-            const locationList = document.getElementById('locationList');
-            locationList.classList.toggle('expanded');
-            locationList.classList.toggle('collapsed');
-            fetchAndDisplayLocations(); // Fetch locations on expand
         }
 
         async function fetchAndDisplayStatuses() {
@@ -349,6 +255,20 @@
                 console.error('Error fetching statuses:', error);
                 alert('Failed to fetch statuses.');
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndDisplayStatuses();
+            fetchAndDisplayLocations();
+        });
+
+        document.getElementById('locationList').addEventListener('click', toggleLocationList);
+
+        function toggleLocationList() {
+            const locationList = document.getElementById('locationList');
+            locationList.classList.toggle('expanded');
+            locationList.classList.toggle('collapsed');
+            fetchAndDisplayLocations(); // Fetch locations on expand
         }
 
         async function fetchAndDisplayLocations() {
@@ -381,48 +301,6 @@
                 alert('Failed to fetch locations.');
             }
         }
-
-        document.getElementById('statusList').addEventListener('click', toggleStatusList);
-        document.getElementById('locationList').addEventListener('click', toggleLocationList);
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchAndDisplayStatuses();
-            fetchAndDisplayLocations();
-        });
-
-        document.getElementById('generatePDF').addEventListener('submit', async function (event) {
-            event.preventDefault();
-            
-            const minId = document.getElementById('minId').value;
-            const maxId = document.getElementById('maxId').value;
-
-            try {
-                const response = await fetch('/api/generate_pdf_range', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ min_id: minId, max_id: maxId })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to run script');
-                }
-                
-                const result = await response.json();
-                console.log('Script response:', result.message);
-                alert(result.message); // Show the output in an alert (adjust as needed)
-            } catch (error) {
-                console.error('Error running script:', error);
-                alert('Failed to run script.');
-            }
-        });
-
-        // Fetch and display statuses on page load
-        document.addEventListener('DOMContentLoaded', fetchAndDisplayStatuses);
-        
-        // Fetch and display locations on page load
-        document.addEventListener('DOMContentLoaded', fetchAndDisplayLocations);
 
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -638,6 +516,111 @@
                 } catch (error) {
                     alert(error.message);
                 }
+            }
+        });
+
+        document.getElementById('mapForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const recordId = document.getElementById('recordId').value.trim();
+            if (!recordId) {
+                alert('Please enter a record ID');
+                return;
+            }
+            retrieveCoordinates(recordId);
+        });
+
+        // Function to retrieve data from the database
+        const retrieveCoordinates = (recordId) => {
+            fetch(`/coordinates?id=${recordId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to retrieve coordinates');
+                    } return response.json();
+                })
+                .then(data => {
+                    const mapDiv = document.getElementById('mapContainer');
+                    mapDiv.innerText = '';
+                    initializeMap(data.latitude, data.longitude);
+                    document.getElementById('screenshotButton').dataset.recordId = recordId;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to retrieve data from the database.');
+                });
+        };
+
+        document.getElementById('screenshotButton').addEventListener('click', function() {
+            const mapContainer = document.getElementById('mapContainer');
+            const recordId = this.dataset.recordId;            
+            
+            leafletImage(map, function(err, canvas) {
+                if (err) {
+                    console.error('Error generating map image:', err);
+                    alert('Failed to generate map image.');
+                    return;
+                }
+                const dataURL = canvas.toDataURL('image/png');
+                fetch('/save-screenshot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: dataURL, recordId: recordId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Screenshot saved:', data.message);
+                    alert('Screenshot saved successfully.');
+                })
+                .catch(error => {
+                    console.error('Error saving screenshot:', error);
+                    alert('Failed to save screenshot.');
+                });
+            });
+        });
+
+        let map = null; // Variable to hold the map instance
+        const initializeMap = (latitude, longitude) => {
+            if (map) {
+                map.remove(); // Remove existing map instance if it exists
+            }
+            map = L.map('mapContainer').setView([latitude, longitude], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Nalezen zde')
+                .openPopup();
+        };
+
+        document.getElementById('generatePDF').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            
+            const minId = document.getElementById('minId').value;
+            const maxId = document.getElementById('maxId').value;
+
+            try {
+                const response = await fetch('/api/generate_pdf_range', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ min_id: minId, max_id: maxId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to run script');
+                }
+                
+                const result = await response.json();
+                console.log('Script response:', result.message);
+                alert(result.message); // Show the output in an alert (adjust as needed)
+            } catch (error) {
+                console.error('Error running script:', error);
+                alert('Failed to run script.');
             }
         });
 

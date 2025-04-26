@@ -7,6 +7,8 @@ const bodyParser = require('body-parser'); // Parsing JSON bodies
 const { upload, uploadDir, uploadHEIC, uploadLocation, formatTimestamp, formatCoordinates, translateStatus, possibleStatuses } = require('./uploadData');
 const { top5Locations, firstLastYear, earliestLatestHour, mostInDay, byYear, byMonth, byDay, byHour, mostInHour } = require('./queries');
 const jwt = require('jsonwebtoken'); // Creatiion a verification of JSON Web Tokens
+const bcrypt = require('bcrypt'); // Hashing
+const rateLimit = require('express-rate-limit'); // Rate limiting
 const cors = require('cors'); // Enabling CORS
 require('dotenv').config(); // Work with .env files
 
@@ -430,21 +432,30 @@ mostInHour(app, dbConfig);
 
 // Loading system secrets
 const SECRET_KEY = process.env.SECRET_KEY;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
 // Setting modules
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true}));
 
+// Rate limiter for login
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // max 5 tries in 15 minutes
+    message: 'Příliš mnoho pokusů o přihlášení, zkuste to znovu později.'
+});
+
 // Route to login page
-app.get('/login', (req, res) => {
+app.get('/BBx8olop', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Login validitation
-app.post('/login', (req, res) => {
+// Login validitation with rate limit and hash
+app.post('/BBx8olop', loginLimiter, async (req, res) => {
     const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
+
+    const match = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+    if (match) {
         const token = jwt.sign({}, SECRET_KEY, { expiresIn: '1h' });
         res.json({ token });
     } else {
