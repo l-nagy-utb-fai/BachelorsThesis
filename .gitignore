@@ -1,4 +1,5 @@
 /uploads/
+/node_modules/
 /mapy/
 /records_report.pdf
 .env
